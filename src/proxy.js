@@ -60,7 +60,10 @@ export class GuardProxy {
     this.toClient = new Map();   // our id -> { upstreamId } | { resolve, reject }
     this.orderLock = Promise.resolve();
 
-    this.child = spawn(upstream.command, upstream.args || [], { env: this.env, cwd: upstream.cwd, stdio: ["pipe", "pipe", "inherit"] });
+    // Windows can't spawn .cmd shims (npx, uvx installed via npm) without a shell; quote args for cmd.exe.
+    const win = process.platform === "win32";
+    const q = (a) => (/[\s"&|<>^]/.test(a) ? `"${String(a).replace(/"/g, '""')}"` : a);
+    this.child = spawn(win ? q(upstream.command) : upstream.command, (upstream.args || []).map((a) => (win ? q(a) : a)), { env: this.env, cwd: upstream.cwd, stdio: ["pipe", "pipe", "inherit"], shell: win, windowsHide: true });
     this.child.on("error", (e) => { this.log(`could not start upstream '${upstream.command}': ${e.message}`); process.exitCode = 1; this.close(); });
     this.child.on("exit", (code) => { this.log(`upstream exited (${code})`); this.onUpstreamExit?.(code); });
     this.up = new LineChannel(this.child.stdout, this.child.stdin, (m) => this.fromUpstream(m), (l) => this.log("bad line from upstream: " + l.slice(0, 200)));
