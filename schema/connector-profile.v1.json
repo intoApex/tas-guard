@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tradingagentstack.com/schema/connector-profile.v1.json",
+  "title": "TradingAgentStack connector profile v1",
+  "description": "What each tool of a trading MCP server can do with money, and where its order fields live. Used by TAS Guard to enforce limits and by tradingagentstack.com to rate connectors.",
+  "type": "object",
+  "required": ["profile_version", "slug", "name", "source", "last_checked", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "profile_version": { "const": 1 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Same slug as the tradingagentstack.com listing." },
+    "name": { "type": "string" },
+    "vendor": { "type": "string" },
+    "listing": { "type": "string", "format": "uri" },
+    "source": { "type": "string", "format": "uri", "description": "Where the tool list was verified (repository or docs)." },
+    "verified_against": { "type": "string", "description": "Exact file, commit or doc page the tool list was read from." },
+    "last_checked": { "type": "string", "format": "date" },
+    "quote_currency": { "type": "string", "description": "Currency that order values are measured in, e.g. USD. 'quote' means the symbol's quote asset (USDT for BTC/USDT)." },
+    "mode": {
+      "type": "object",
+      "description": "How to tell paper/sandbox from live money.",
+      "additionalProperties": false,
+      "properties": {
+        "env": { "type": "string", "description": "Environment variable of the upstream server that selects paper trading." },
+        "paper_values": { "type": "array", "items": { "type": "string" } },
+        "default": { "enum": ["paper", "live"] },
+        "note": { "type": "string" }
+      }
+    },
+    "preview": {
+      "type": "object",
+      "description": "For servers that answer the first order call with a preview and a confirmation token.",
+      "additionalProperties": false,
+      "properties": {
+        "confirm_arg": { "type": "string", "description": "Argument carrying the confirmation token; ignored when matching approvals." },
+        "result_marker": { "type": "string", "description": "Text present in a preview result; previews are not counted as executed orders." }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "description": "Tool name -> classification.",
+      "additionalProperties": { "$ref": "#/$defs/tool" }
+    },
+    "patterns": {
+      "type": "array",
+      "description": "Regex fallbacks for tools not listed by name, checked in order.",
+      "items": {
+        "type": "object",
+        "required": ["match", "class"],
+        "additionalProperties": false,
+        "properties": { "match": { "type": "string" }, "class": { "$ref": "#/$defs/class" } }
+      }
+    }
+  },
+  "$defs": {
+    "class": {
+      "enum": ["read", "benign_write", "order", "modify", "cancel", "cancel_all", "close", "close_all", "leverage", "funds_out", "account", "raw_write", "other_write"],
+      "description": "read: no side effects. benign_write: changes nothing about money (watchlists). order: opens or adds to a position. modify: changes a live order. cancel / cancel_all: cancels orders (cancel_all can remove stop-losses). close / close_all: reduces or exits positions. leverage: changes leverage or margin mode. funds_out: withdrawals and transfers. account: account settings. raw_write: escape hatches that can call any write endpoint. other_write: any other money-relevant write."
+    },
+    "tool": {
+      "type": "object",
+      "required": ["class"],
+      "additionalProperties": false,
+      "properties": {
+        "class": { "$ref": "#/$defs/class" },
+        "fields": {
+          "type": "object",
+          "description": "Argument names holding order facts. A list means: first one present wins.",
+          "additionalProperties": false,
+          "properties": {
+            "symbol": { "$ref": "#/$defs/argref" },
+            "side": { "$ref": "#/$defs/argref" },
+            "qty": { "$ref": "#/$defs/argref" },
+            "notional": { "$ref": "#/$defs/argref" },
+            "price": { "$ref": "#/$defs/argref" },
+            "legs": { "$ref": "#/$defs/argref" }
+          }
+        },
+        "multiplier": { "type": "number", "description": "Contract multiplier applied to qty x price (100 for US equity options)." },
+        "asset_class": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "argref": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://tradingagentstack.com/schema/connector-profile.v1.json",
+  "profile_version": 1,
+  "slug": "ccxt-mcp-server",
+  "name": "CCXT MCP Server",
+  "vendor": "CCXT",
+  "listing": "https://tradingagentstack.com/tool/ccxt-mcp-server/",
+  "source": "https://github.com/ccxt/ccxt/tree/master/mcp",
+  "verified_against": "mcp/ts/tools/*.ts registerTool calls at ccxt commit 310bf4b (2026-10-19)",
+  "last_checked": "2026-10-20",
+  "quote_currency": "quote",
+  "mode": {
+    "default": "live",
+    "note": "Paper vs live is set per account in the ccxt-mcp config file, which the guard cannot see; orders are treated as live."
+  },
+  "preview": {
+    "confirm_arg": "confirm",
+    "result_marker": "confirmToken"
+  },
+  "tools": {
+    "create_order": {
+      "class": "order",
+      "fields": { "symbol": "symbol", "side": "side", "qty": "amount", "notional": "cost", "price": "price" },
+      "note": "amount is in base units (or contracts/shares); cost is the quote-currency value."
+    },
+    "edit_order": { "class": "modify", "fields": { "symbol": "symbol", "side": "side", "qty": "amount", "price": "price" } },
+    "cancel_order": { "class": "cancel" },
+    "cancel_all_orders": { "class": "cancel_all", "note": "Also cancels protective stop orders." },
+    "set_leverage": { "class": "leverage" },
+    "set_margin_mode": { "class": "leverage" },
+    "call_write_method": { "class": "raw_write", "note": "Calls any unified write method by name." },
+    "withdraw": { "class": "funds_out" },
+    "transfer": { "class": "funds_out" },
+    "call_implicit_write": { "class": "raw_write", "note": "Calls any raw exchange write endpoint." },
+    "get_deposit_address": { "class": "read" },
+    "list_exchanges": { "class": "read" },
+    "describe_exchange": { "class": "read" },
+    "describe_method": { "class": "read" },
+    "search_markets": { "class": "read" },
+    "search_events": { "class": "read" },
+    "get_safety_status": { "class": "read" },
+    "call_read_method": { "class": "read" },
+    "call_implicit_get": { "class": "read" },
+    "list_accounts": { "class": "read" },
+    "watch_subscribe": { "class": "read" },
+    "watch_read": { "class": "read" },
+    "watch_unsubscribe": { "class": "read" },
+    "watch_list": { "class": "read" }
+  },
+  "patterns": [
+    { "match": "^get_", "class": "read" }
+  ]
+}

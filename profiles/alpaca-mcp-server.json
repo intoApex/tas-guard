@@ -1,0 +1,59 @@
+{
+  "$schema": "https://tradingagentstack.com/schema/connector-profile.v1.json",
+  "profile_version": 1,
+  "slug": "alpaca-mcp-server",
+  "name": "Alpaca MCP Server",
+  "vendor": "Alpaca",
+  "listing": "https://tradingagentstack.com/tool/alpaca-mcp-server/",
+  "source": "https://github.com/alpacahq/alpaca-mcp-server",
+  "verified_against": "tests/test_server_construction.py EXPECTED_TOOLS and src/alpaca_mcp_server/overrides.py at commit 2a973a0 (2026-10-12)",
+  "last_checked": "2026-10-20",
+  "quote_currency": "USD",
+  "mode": {
+    "env": "ALPACA_PAPER_TRADE",
+    "paper_values": ["true", "1", "yes"],
+    "default": "paper",
+    "note": "The server trades paper unless ALPACA_PAPER_TRADE is set to false."
+  },
+  "tools": {
+    "place_stock_order": {
+      "class": "order",
+      "asset_class": "equity",
+      "fields": { "symbol": "symbol", "side": "side", "qty": "qty", "notional": "notional", "price": ["limit_price", "stop_price"] }
+    },
+    "place_crypto_order": {
+      "class": "order",
+      "asset_class": "crypto",
+      "fields": { "symbol": "symbol", "side": "side", "qty": "qty", "notional": "notional", "price": ["limit_price", "stop_price"] }
+    },
+    "place_option_order": {
+      "class": "order",
+      "asset_class": "option",
+      "multiplier": 100,
+      "fields": { "symbol": "symbol", "side": "side", "qty": "qty", "price": ["limit_price", "stop_price"], "legs": "legs" },
+      "note": "Option qty is in contracts; value = qty x price x 100. Multi-leg orders have no single value and need approval."
+    },
+    "replace_order_by_id": { "class": "modify", "note": "Changes a live order; the request does not carry the symbol." },
+    "cancel_order_by_id": { "class": "cancel" },
+    "cancel_all_orders": { "class": "cancel_all", "note": "Also cancels protective stop orders." },
+    "close_position": { "class": "close" },
+    "close_all_positions": { "class": "close_all" },
+    "exercise_options_position": { "class": "other_write" },
+    "do_not_exercise_options_position": { "class": "other_write" },
+    "update_account_config": { "class": "account" },
+    "create_locate": { "class": "other_write", "note": "Requests shares to borrow for short selling." },
+    "create_watchlist": { "class": "benign_write" },
+    "update_watchlist_by_id": { "class": "benign_write" },
+    "delete_watchlist_by_id": { "class": "benign_write" },
+    "add_asset_to_watchlist_by_id": { "class": "benign_write" },
+    "remove_asset_from_watchlist_by_id": { "class": "benign_write" },
+    "search_alpaca_docs": { "class": "read" },
+    "fetch_alpaca_doc": { "class": "read" },
+    "search_alpaca_api_specs": { "class": "read" },
+    "list_alpaca_api_endpoints": { "class": "read" },
+    "get_alpaca_endpoint_docs": { "class": "read" }
+  },
+  "patterns": [
+    { "match": "^get_", "class": "read" }
+  ]
+}

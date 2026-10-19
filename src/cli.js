@@ -1,0 +1,152 @@
+#!/usr/bin/env node
+// TAS Guard CLI. `run` is what your MCP client starts; the other commands are for you, the human.
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { GuardProxy, VERSION } from "./proxy.js";
+import { State, defaultStateDir } from "./state.js";
+import { loadProfile, listBuiltinProfiles, PROFILE_DIR } from "./profiles.js";
+import { resolvePolicy } from "./policy.js";
+
+const HELP = `TAS Guard ${VERSION}: trading-aware safety proxy for AI agents using broker and exchange MCP servers.
+
+Run (your MCP client starts this):
+  tas-guard run --config guard.json
+  tas-guard run --profile alpaca-mcp-server [--policy policy.json] [--name alpaca] -- <upstream command> [args...]
+
+Human controls (run these yourself; never let the agent run them):
+  tas-guard pending              list actions waiting for approval
+  tas-guard approve <id>         approve one held action (the agent then repeats the call)
+  tas-guard deny <id>            deny one held action
+  tas-guard kill [reason]        kill switch: block all new orders on every guard
+  tas-guard resume               turn the kill switch off
+  tas-guard status [--name n]    limits and today's usage
+  tas-guard log [--tail 20]      recent audit log entries
+  tas-guard verify-log           check the audit log's hash chain for tampering
+
+Setup:
+  tas-guard profiles             list built-in connector profiles
+  tas-guard init <profile>       print a starter guard.json for a profile
+
+State lives in ${defaultStateDir()} (override with TAS_GUARD_HOME).`;
+
+function flag(argv, name, fallback) {
+  const i = argv.indexOf(name);
+  return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : fallback;
+}
+
+/** Replace ${VAR} in config strings with environment values, so secrets can stay out of the file. */
+function expandEnv(v) {
+  if (typeof v === "string") return v.replace(/\$\{([A-Z0-9_]+)\}/gi, (_, k) => process.env[k] ?? "");
+  if (Array.isArray(v)) return v.map(expandEnv);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, expandEnv(x)]));
+  return v;
+}
+
+function loadRunConfig(argv) {
+  const cfgPath = flag(argv, "--config");
+  if (cfgPath) {
+    const path = resolve(cfgPath);
+    const cfg = expandEnv(JSON.parse(readFileSync(path, "utf8")));
+    if (!cfg.upstream?.command) throw new Error(`${path}: "upstream.command" is required`);
+    return { ...cfg, baseDir: dirname(path) };
+  }
+  const dd = argv.indexOf("--");
+  if (dd < 0 || !argv[dd + 1]) throw new Error("Give --config guard.json, or the upstream command after --");
+  const policyPath = flag(argv.slice(0, dd), "--policy");
+  return {
+    name: flag(argv.slice(0, dd), "--name"),
+    profile: flag(argv.slice(0, dd), "--profile", "auto"),
+    policy: policyPath ? JSON.parse(readFileSync(resolve(policyPath), "utf8")) : {},
+    upstream: { command: argv[dd + 1], args: argv.slice(dd + 2) },
+    baseDir: process.cwd(),
+  };
+}
+
+function cmdRun(argv) {
+  const cfg = loadRunConfig(argv);
+  const profile = loadProfile(cfg.profile, cfg.baseDir);
+  const policy = resolvePolicy(cfg.policy || {});
+  const name = cfg.name || profile?.slug || "default";
+  const state = new State(cfg.state_dir ? resolve(cfg.baseDir, cfg.state_dir) : defaultStateDir(), name);
+  const proxy = new GuardProxy({ profile, policy, state, upstream: { ...cfg.upstream, cwd: cfg.upstream.cwd ? resolve(cfg.baseDir, cfg.upstream.cwd) : undefined } });
+  proxy.onUpstreamExit = (code) => process.exit(code ?? 1);
+}
+
+const state = (argv) => new State(defaultStateDir(), flag(argv, "--name", "default"));
+
+const commands = {
+  run: cmdRun,
+  pending() {
+    const items = new State().pending().items.filter((i) => i.status === "pending");
+    if (!items.length) return console.log("No actions are waiting for approval.");
+    for (const i of items) console.log(`${i.id}  [${i.guard}]  ${i.created}\n        ${i.summary}\n        why: ${i.reason}`);
+  },
+  approve(argv) {
+    const id = argv[0];
+    if (!id) throw new Error("Usage: tas-guard approve <id>");
+    const i = new State().decideApproval(id, true);
+    console.log(`Approved ${i.id}: ${i.summary}\nThe agent can now repeat the same call once.`);
+  },
+  deny(argv) {
+    const id = argv[0];
+    if (!id) throw new Error("Usage: tas-guard deny <id>");
+    const i = new State().decideApproval(id, false);
+    console.log(`Denied ${i.id}: ${i.summary}`);
+  },
+  kill(argv) {
+    new State().kill(argv.join(" ") || "manual");
+    console.log("Kill switch ON. All guards now block new orders; reads, cancels and closing positions still work.\nTurn it off with: tas-guard resume");
+  },
+  resume() {
+    new State().resume();
+    console.log("Kill switch off.");
+  },
+  status(argv) {
+    const s = state(argv);
+    const u = s.usage();
+    console.log(JSON.stringify({ guard: s.guard, kill_switch: s.killed(), today: u, state_dir: s.dir }, null, 2));
+  },
+  log(argv) {
+    const s = new State();
+    if (!existsSync(s.auditPath)) return console.log("The audit log is empty.");
+    const n = Number(flag(argv, "--tail", 20));
+    const lines = readFileSync(s.auditPath, "utf8").trimEnd().split("\n").slice(-n);
+    for (const l of lines) {
+      const e = JSON.parse(l);
+      console.log(`${e.ts}  ${e.guard}  ${e.outcome.padEnd(17)} ${e.tool} (${e.class})  ${e.reason || ""}`);
+    }
+  },
+  "verify-log"() {
+    const r = new State().verifyAudit();
+    console.log(r.ok ? `Audit log OK: ${r.lines} entries, hash chain intact.` : `Audit log TAMPERED or corrupted at line ${r.broken_at} of ${r.lines}.`);
+    if (!r.ok) process.exitCode = 2;
+  },
+  profiles() {
+    for (const slug of listBuiltinProfiles()) {
+      const p = loadProfile(slug);
+      console.log(`${slug.padEnd(22)} ${p.name}, checked ${p.last_checked} against ${p.source}`);
+    }
+    console.log(`\nFiles: ${PROFILE_DIR}`);
+  },
+  init(argv) {
+    const slug = argv[0];
+    const p = slug ? loadProfile(slug) : null;
+    if (!p) throw new Error(`Usage: tas-guard init <profile>. Profiles: ${listBuiltinProfiles().join(", ")}`);
+    const upstream = {
+      "alpaca-mcp-server": { command: "uvx", args: ["alpaca-mcp-server"], env: { ALPACA_API_KEY: "${ALPACA_API_KEY}", ALPACA_SECRET_KEY: "${ALPACA_SECRET_KEY}", ALPACA_PAPER_TRADE: "true" } },
+      "ccxt-mcp-server": { command: "npx", args: ["-y", "ccxt-mcp"] },
+    }[slug] || { command: "<upstream command>", args: [] };
+    console.log(JSON.stringify({ name: slug, profile: slug, upstream, policy: { max_order_value: 500, max_daily_value: 2000, approve_over: 250, symbols_allow: [], live_requires_approval: true } }, null, 2));
+  },
+};
+
+const [cmd, ...rest] = process.argv.slice(2);
+try {
+  if (!cmd || cmd === "help" || cmd === "--help" || cmd === "-h") console.log(HELP);
+  else if (cmd === "--version" || cmd === "-v") console.log(VERSION);
+  else if (commands[cmd]) commands[cmd](rest);
+  else { console.error(`Unknown command '${cmd}'.\n\n${HELP}`); process.exitCode = 1; }
+} catch (e) {
+  console.error("tas-guard: " + e.message);
+  process.exitCode = 1;
+}
