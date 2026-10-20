@@ -1,6 +1,6 @@
 {
   "name": "tas-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Trading-aware safety proxy for AI agents: puts per-order and daily caps, symbol allowlists, human approvals, a kill switch and a tamper-evident audit log in front of any broker or exchange MCP server.",
   "type": "module",
   "bin": { "tas-guard": "src/cli.js" },

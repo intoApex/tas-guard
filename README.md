@@ -126,6 +126,8 @@ When an action needs approval, the guard asks **you**, never the agent.
 - **In the client:** if your MCP client supports elicitation, a prompt appears in the app ("Approve this action?"). Only a human can answer it.
 - **From a terminal:** otherwise the call is held with an id. Run `npx tas-guard approve <id>` (or `deny <id>`), and the agent repeats the call. Each approval works once, for that exact call, within 15 minutes.
 
+Tested with Claude Desktop (Windows, October 2026) against an Alpaca paper account: Claude Desktop doesn't show the in-app prompt, so approvals there go through `npx tas-guard approve <id>`. Claude relays the request id and waits for you.
+
 ```
 npx tas-guard pending
 npx tas-guard approve 3f9a1c

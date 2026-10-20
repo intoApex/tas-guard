@@ -6,7 +6,7 @@ import { decide, staticAction } from "./policy.js";
 import { canonical, sha256 } from "./state.js";
 
 export const GUARD_TOOL = "tas_guard_status";
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 
 export class LineChannel {
   constructor(readable, writable, onMessage, onBadLine) {

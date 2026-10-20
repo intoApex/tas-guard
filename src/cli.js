@@ -114,7 +114,8 @@ const commands = {
     const lines = readFileSync(s.auditPath, "utf8").trimEnd().split("\n").slice(-n);
     for (const l of lines) {
       const e = JSON.parse(l);
-      console.log(`${e.ts}  ${e.guard}  ${e.outcome.padEnd(17)} ${e.tool} (${e.class})  ${e.reason || ""}`);
+      const by = e.approved_by ? `  [approved via ${e.approved_by === "cli" ? "CLI" : "app prompt"}]` : e.approval_id ? `  [request ${e.approval_id}]` : "";
+      console.log(`${e.ts}  ${e.guard}  ${e.outcome.padEnd(17)} ${e.tool} (${e.class})  ${e.reason || ""}${by}`);
     }
   },
   "verify-log"() {
