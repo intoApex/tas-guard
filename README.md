@@ -2,6 +2,8 @@
 
 **A trading-aware safety proxy for AI agents.** Put it between your AI client (Claude, ChatGPT, Cursor, your own agent) and any broker or exchange MCP server. It enforces per-order and daily limits, symbol allowlists, human approvals, a kill switch and a tamper-evident audit log, before an order ever reaches your broker.
 
+![An agent's over-limit order is blocked, a market order is held, approved on the phone, then sent to the broker](docs/demo.gif)
+
 ```
 AI client  ──►  TAS Guard  ──►  Alpaca / CCXT / any trading MCP server  ──►  your account
                    │
