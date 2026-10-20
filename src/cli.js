@@ -6,6 +6,7 @@ import { GuardProxy, VERSION } from "./proxy.js";
 import { State, defaultStateDir } from "./state.js";
 import { loadProfile, listBuiltinProfiles, PROFILE_DIR } from "./profiles.js";
 import { resolvePolicy } from "./policy.js";
+import { readJson } from "./profiles.js";
 
 const HELP = `TAS Guard ${VERSION}: trading-aware safety proxy for AI agents using broker and exchange MCP servers.
 
@@ -46,7 +47,7 @@ function loadRunConfig(argv) {
   const cfgPath = flag(argv, "--config");
   if (cfgPath) {
     const path = resolve(cfgPath);
-    const cfg = expandEnv(JSON.parse(readFileSync(path, "utf8")));
+    const cfg = expandEnv(readJson(path));
     if (!cfg.upstream?.command) throw new Error(`${path}: "upstream.command" is required`);
     return { ...cfg, baseDir: dirname(path) };
   }
@@ -56,7 +57,7 @@ function loadRunConfig(argv) {
   return {
     name: flag(argv.slice(0, dd), "--name"),
     profile: flag(argv.slice(0, dd), "--profile", "auto"),
-    policy: policyPath ? JSON.parse(readFileSync(resolve(policyPath), "utf8")) : {},
+    policy: policyPath ? readJson(resolve(policyPath)) : {},
     upstream: { command: argv[dd + 1], args: argv.slice(dd + 2) },
     baseDir: process.cwd(),
   };

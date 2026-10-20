@@ -121,3 +121,12 @@ test("approvals are single-use and expire", () => {
   s.decideApproval(old.id, true);
   assert.equal(s.consumeApproval("f2", 0), null, "expired");
 });
+
+test("config files with a Windows UTF-8 BOM are read", async () => {
+  const { readJson } = await import("../src/profiles.js");
+  const f = join(mkdtempSync(join(tmpdir(), "tg-")), "c.json");
+  writeFileSync(f, "﻿" + JSON.stringify({ a: 1 }));
+  assert.deepEqual(readJson(f), { a: 1 });
+  writeFileSync(f, "{bad");
+  assert.throws(() => readJson(f), /not valid JSON/);
+});

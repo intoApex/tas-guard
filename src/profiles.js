@@ -6,6 +6,12 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const PROFILE_DIR = join(HERE, "..", "profiles");
 
+/** Read a JSON file, tolerating the UTF-8 BOM that Windows PowerShell adds. */
+export function readJson(path) {
+  const t = readFileSync(path, "utf8").replace(/^\uFEFF/, "");
+  try { return JSON.parse(t); } catch (e) { throw new Error(`${path} is not valid JSON: ${e.message}`); }
+}
+
 export const CLASSES = ["read", "benign_write", "order", "modify", "cancel", "cancel_all", "close", "close_all", "leverage", "funds_out", "account", "raw_write", "other_write", "unknown"];
 
 export function listBuiltinProfiles() {
@@ -18,7 +24,7 @@ export function loadProfile(ref, baseDir = process.cwd()) {
   const builtin = join(PROFILE_DIR, ref + ".json");
   const path = existsSync(builtin) ? builtin : resolve(baseDir, ref);
   if (!existsSync(path)) throw new Error(`Profile '${ref}' not found. Built-in profiles: ${listBuiltinProfiles().join(", ")}`);
-  const p = JSON.parse(readFileSync(path, "utf8"));
+  const p = readJson(path);
   if (p.profile_version !== 1 || !p.tools || typeof p.tools !== "object") throw new Error(`Profile ${path} is not a v1 connector profile`);
   for (const [name, t] of Object.entries(p.tools)) {
     if (!CLASSES.includes(t.class)) throw new Error(`Profile ${p.slug}: tool ${name} has unknown class '${t.class}'`);
