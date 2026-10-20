@@ -185,3 +185,20 @@ test('"cli": false: only the phone can approve', async () => {
     assert.ok(!(await pending).isError);
   } finally { g.stop(); await tg.close(); }
 });
+
+test("two guards on one bot: each command is handled once", async () => {
+  const tg = await startMockTelegram();
+  const a = await startGuard({ tg });
+  // second guard sharing the same state dir and bot, like Claude Desktop's Chat + Cowork copies
+  const home = a.home;
+  const cfg = join(home, "guard.json");
+  const p2 = spawn(process.execPath, [CLI, "run", "--config", cfg], { env: { ...process.env, TAS_GUARD_HOME: home }, stdio: ["pipe", "ignore", "ignore"] });
+  p2.stdin.write(JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "1" } } }) + "\n");
+  try {
+    await new Promise((r) => setTimeout(r, 800)); // let both start polling
+    for (let i = 0; i < 3; i++) { tg.say("/status", OWNER); await new Promise((r) => setTimeout(r, 400)); }
+    await tg.waitFor((s) => s.sent.filter((m) => /Kill switch/.test(m.text)).length >= 3);
+    await new Promise((r) => setTimeout(r, 1500));
+    assert.equal(tg.s.sent.filter((m) => /Kill switch/.test(m.text)).length, 3);
+  } finally { a.stop(); p2.stdin.end(); p2.kill(); await tg.close(); }
+});

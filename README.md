@@ -214,7 +214,7 @@ Tested on Windows with the Microsoft Store version of Claude Desktop, October 20
 ## Development
 
 ```
-npm test        # 33 tests: unit, end to end through a mock broker over real MCP stdio, and the phone flow against a mock Telegram API
+npm test        # 34 tests: unit, end to end through a mock broker over real MCP stdio, and the phone flow against a mock Telegram API
 ```
 
 MIT licensed. Built by [TradingAgentStack](https://tradingagentstack.com), the independent directory of what AI trading tools can do with your money.

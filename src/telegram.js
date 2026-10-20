@@ -2,6 +2,9 @@
 // Approve / Deny buttons for held actions, alerts, and /kill /resume /status /pending from your phone.
 // Decisions go through the shared state files, so several guards (and the CLI) can share one bot.
 
+import { mkdirSync, writeFileSync, readdirSync, statSync, rmSync } from "node:fs";
+import { join } from "node:path";
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export class TelegramApprover {
@@ -25,6 +28,10 @@ export class TelegramApprover {
     this.sent = new Map(); // approval id -> telegram message id
     this.offset = 0;
     this.stopped = false;
+    // Several guards (e.g. one per Claude Desktop session type) can poll the same bot and receive the
+    // same update. Each update is handled once: the first process to create its claim file wins.
+    this.claimDir = join(state.dir, "telegram", this.token.split(":")[0]);
+    mkdirSync(this.claimDir, { recursive: true, mode: 0o700 });
   }
 
   async api(method, body = {}, timeoutMs = 15_000) {
@@ -81,6 +88,7 @@ export class TelegramApprover {
       }
       for (const u of updates) {
         this.offset = Math.max(this.offset, u.update_id + 1);
+        if (!this.claim(u.update_id)) continue;
         try { await this.handle(u); } catch (e) { this.log("telegram update: " + e.message); }
       }
       await this.refreshMessages();
@@ -88,6 +96,19 @@ export class TelegramApprover {
   }
 
   stop() { this.stopped = true; }
+
+  /** Atomically claim an update so only one process handles it. Old claims are pruned. */
+  claim(updateId) {
+    try { writeFileSync(join(this.claimDir, String(updateId)), "", { flag: "wx" }); }
+    catch (e) { if (e.code === "EEXIST") return false; throw e; }
+    if (Math.random() < 0.05) {
+      const cutoff = Date.now() - 864e5;
+      for (const f of readdirSync(this.claimDir)) {
+        try { if (statSync(join(this.claimDir, f)).mtimeMs < cutoff) rmSync(join(this.claimDir, f)); } catch {}
+      }
+    }
+    return true;
+  }
 
   fromOwner(u) {
     const from = u.callback_query?.from?.id ?? u.message?.from?.id;
