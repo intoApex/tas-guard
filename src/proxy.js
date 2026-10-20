@@ -71,6 +71,14 @@ export class GuardProxy {
     this.client = new LineChannel(input, output, (m) => { this.inflight++; this.fromClient(m).catch((e) => this.log("error: " + e.stack)).finally(() => this.inflight--); }, (l) => this.log("bad line from client: " + l.slice(0, 200)));
     input.on("end", () => this.drainThenClose());
     log(`guarding '${upstream.command}' with profile ${profile ? profile.slug : "auto (heuristics)"}, mode ${this.mode}`);
+    // Which credentials the upstream gets, and from where (never the values): makes stale keys easy to spot.
+    for (const [k, v] of Object.entries(this.env)) {
+      if (!/(API_?KEY|KEY_?ID|ACCESS_?KEY|SECRET|TOKEN|PASSWORD|PASSPHRASE)/i.test(k) || !v) continue;
+      if (!(k in (upstream.env || {})) && !(profile?.mode?.env && k.startsWith(profile.mode.env.split("_")[0]))) continue;
+      const from = upstream.env?.[k] !== undefined && process.env[k] !== upstream.env[k] ? "guard config" : "client env";
+      const shown = /SECRET|TOKEN|PASSWORD|PASSPHRASE/i.test(k) ? `set, ${String(v).length} chars` : `...${String(v).slice(-4)}`;
+      log(`credential ${k}: ${shown} (from ${from})`);
+    }
   }
 
   close() { try { this.child.stdin.end(); this.child.kill(); } catch {} }

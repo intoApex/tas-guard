@@ -160,6 +160,16 @@ A profile says what each tool of a server can do with money and where its order 
 
 Using a server without a profile? `"profile": "auto"` classifies tools by name and MCP annotations, and blocks anything it doesn't recognize. Profiles for more brokers are welcome as PRs.
 
+## Windows and Claude Desktop notes
+
+Tested on Windows with the Microsoft Store version of Claude Desktop, October 2026.
+
+- **Put API keys in your guard file** (`upstream.env` in `alpaca.json`), not in Claude Desktop's config. Claude Desktop keeps its own copy of each server's settings, so keys you change in its config file may not reach the server. Keys in the guard file always win. The guard's log shows which key the upstream received (last 4 characters only), e.g. `credential ALPACA_API_KEY: ...PBYR (from guard config)`.
+- **Use `cmd /c` to start npx** in `claude_desktop_config.json`: `"command": "cmd", "args": ["/c", "npx", "-y", "tas-guard", "run", "--config", "C:\\Users\\you\\tas-guard\\alpaca.json"]`.
+- **Edit Claude Desktop's config only while the app is fully quit** (system tray, Quit). It rewrites the file while running. The Store version keeps it under `%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\`.
+- **Faster startup:** run `uv tool install alpaca-mcp-server` once and set `"command": "alpaca-mcp-server", "args": []` in the guard file. `uvx` otherwise re-resolves the server on every launch, which adds 10 to 20 seconds.
+- **Approvals:** Claude Desktop doesn't show the in-app approval prompt, so approve held actions with `npx tas-guard approve <id>`.
+
 ## Limitations (read these)
 
 - **An agent with shell access could run `tas-guard approve` itself.** If your agent can run terminal commands (Claude Code, Cursor agents), rely on in-client approval prompts or `"unknown_value": "block"` with tight hard limits.
