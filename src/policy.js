@@ -65,7 +65,8 @@ export function staticAction(policy, cls) {
 export function decide({ info, args, policy, usage, mode, killed, now = Date.now() }) {
   const cls = info.class;
   if (killed && !KILL_SWITCH_ALLOWED.has(cls)) {
-    return { action: "block", reason: "Kill switch is on: only reads, cancels and closing positions are allowed.", counts: false };
+    const order = cls === "order" || cls === "modify" ? extractOrder(info, args) : undefined;
+    return { action: "block", reason: "Kill switch is on: only reads, cancels and closing positions are allowed.", order, counts: false };
   }
   const a = staticAction(policy, cls);
   if (a === "block") return { action: "block", reason: `'${cls}' tools are blocked by policy.`, counts: false };

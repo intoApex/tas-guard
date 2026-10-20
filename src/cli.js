@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 // TAS Guard CLI. `run` is what your MCP client starts; the other commands are for you, the human.
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync } from "node:fs";
+import { createInterface } from "node:readline/promises";
 import { dirname, resolve } from "node:path";
 import { GuardProxy, VERSION } from "./proxy.js";
 import { State, defaultStateDir } from "./state.js";
 import { loadProfile, listBuiltinProfiles, PROFILE_DIR } from "./profiles.js";
 import { resolvePolicy } from "./policy.js";
 import { readJson } from "./profiles.js";
+import { findChatId } from "./telegram.js";
 
 const HELP = `TAS Guard ${VERSION}: trading-aware safety proxy for AI agents using broker and exchange MCP servers.
 
@@ -23,6 +25,11 @@ Human controls (run these yourself; never let the agent run them):
   tas-guard status [--name n]    limits and today's usage
   tas-guard log [--tail 20]      recent audit log entries
   tas-guard verify-log           check the audit log's hash chain for tampering
+
+Phone approvals (Telegram):
+  tas-guard telegram-setup --config guard.json
+                                 link your own Telegram bot: approve/deny from your phone,
+                                 alerts, and /kill /resume /status /pending
 
 Setup:
   tas-guard profiles             list built-in connector profiles
@@ -69,7 +76,7 @@ function cmdRun(argv) {
   const policy = resolvePolicy(cfg.policy || {});
   const name = cfg.name || profile?.slug || "default";
   const state = new State(cfg.state_dir ? resolve(cfg.baseDir, cfg.state_dir) : defaultStateDir(), name);
-  const proxy = new GuardProxy({ profile, policy, state, upstream: { ...cfg.upstream, cwd: cfg.upstream.cwd ? resolve(cfg.baseDir, cfg.upstream.cwd) : undefined } });
+  const proxy = new GuardProxy({ profile, policy, state, approvals: cfg.approvals || {}, upstream: { ...cfg.upstream, cwd: cfg.upstream.cwd ? resolve(cfg.baseDir, cfg.upstream.cwd) : undefined } });
   proxy.onUpstreamExit = (code) => process.exit(code ?? 1);
 }
 
@@ -114,14 +121,34 @@ const commands = {
     const lines = readFileSync(s.auditPath, "utf8").trimEnd().split("\n").slice(-n);
     for (const l of lines) {
       const e = JSON.parse(l);
-      const by = e.approved_by ? `  [approved via ${e.approved_by === "cli" ? "CLI" : "app prompt"}]` : e.approval_id ? `  [request ${e.approval_id}]` : "";
-      console.log(`${e.ts}  ${e.guard}  ${e.outcome.padEnd(17)} ${e.tool} (${e.class})  ${e.reason || ""}${by}`);
+      const via = { cli: "CLI", "client-prompt": "app prompt", telegram: "Telegram" }[e.approved_by] || e.approved_by;
+      const by = e.approved_by ? `  [${e.outcome === "denied" ? "denied" : "approved"} via ${via}]` : e.approval_id ? `  [request ${e.approval_id}]` : "";
+      console.log(`${e.ts}  ${e.guard}  ${e.outcome.padEnd(17)} ${e.tool}${e.class ? ` (${e.class})` : ""}  ${e.reason || ""}${by}`);
     }
   },
   "verify-log"() {
     const r = new State().verifyAudit();
     console.log(r.ok ? `Audit log OK: ${r.lines} entries, hash chain intact.` : `Audit log TAMPERED or corrupted at line ${r.broken_at} of ${r.lines}.`);
     if (!r.ok) process.exitCode = 2;
+  },
+  async "telegram-setup"(argv) {
+    const cfgPath = flag(argv, "--config");
+    if (!cfgPath) throw new Error("Usage: tas-guard telegram-setup --config guard.json");
+    const path = resolve(cfgPath);
+    const cfg = readJson(path);
+    let token = process.env.TAS_TELEGRAM_BOT_TOKEN;
+    if (!token) {
+      console.log("1. In Telegram, open @BotFather, send /newbot and follow the steps.\n2. Copy the token it gives you (looks like 123456789:ABC...).");
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      token = (await rl.question("Bot token: ")).trim();
+      rl.close();
+    }
+    if (!/^\d+:[\w-]{20,}$/.test(token)) throw new Error("That doesn't look like a bot token (expected 123456789:ABC...).");
+    console.log("3. Now open your bot in Telegram and press Start (or send it any message). Waiting up to 2 minutes...");
+    const r = await findChatId(token, flag(argv, "--api-base", "https://api.telegram.org"));
+    cfg.approvals = { ...(cfg.approvals || {}), telegram: { ...(cfg.approvals?.telegram || {}), bot_token: token, chat_id: r.chat_id } };
+    writeFileSync(path, JSON.stringify(cfg, null, 2) + "\n", { mode: 0o600 });
+    console.log(`Linked @${r.bot} to ${r.name || "your"} chat (${r.chat_id}) and saved it in ${path}.\nRestart your AI app so the guard picks it up. On your phone: /status, /pending, /kill, /resume.`);
   },
   profiles() {
     for (const slug of listBuiltinProfiles()) {
@@ -146,7 +173,7 @@ const [cmd, ...rest] = process.argv.slice(2);
 try {
   if (!cmd || cmd === "help" || cmd === "--help" || cmd === "-h") console.log(HELP);
   else if (cmd === "--version" || cmd === "-v") console.log(VERSION);
-  else if (commands[cmd]) commands[cmd](rest);
+  else if (commands[cmd]) await commands[cmd](rest);
   else { console.error(`Unknown command '${cmd}'.\n\n${HELP}`); process.exitCode = 1; }
 } catch (e) {
   console.error("tas-guard: " + e.message);

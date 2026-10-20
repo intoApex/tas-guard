@@ -81,11 +81,11 @@ export class State {
     writeJson(this.pendingPath, p);
   }
   /** Create (or reuse) a pending approval for this exact call. */
-  requestApproval({ fingerprint, tool, summary, reason }) {
+  requestApproval({ fingerprint, tool, summary, reason, cli_allowed = true }) {
     const p = this.pending();
     const existing = p.items.find((i) => i.fingerprint === fingerprint && i.guard === this.guard && i.status === "pending");
     if (existing) return existing;
-    const item = { id: randomBytes(3).toString("hex"), guard: this.guard, fingerprint, tool, summary, reason, created: new Date().toISOString(), status: "pending" };
+    const item = { id: randomBytes(3).toString("hex"), guard: this.guard, fingerprint, tool, summary, reason, created: new Date().toISOString(), status: "pending", ...(cli_allowed ? {} : { cli_allowed: false }) };
     p.items.push(item);
     this.savePending(p);
     return item;
@@ -101,14 +101,15 @@ export class State {
     this.savePending(p);
     return item;
   }
-  decideApproval(id, approve) {
+  decideApproval(id, approve, by = "cli") {
     const p = this.pending();
     const item = p.items.find((i) => i.id === id);
     if (!item) throw new Error(`No approval request with id ${id}`);
     if (item.status !== "pending") throw new Error(`Request ${id} is already ${item.status}`);
+    if (by === "cli" && item.cli_allowed === false) throw new Error(`Request ${id} can only be approved or denied from your phone (this guard has "cli": false).`);
     item.status = approve ? "approved" : "denied";
     item.decided_at = new Date().toISOString();
-    item.decided_by = "cli";
+    item.decided_by = by;
     this.savePending(p);
     return item;
   }

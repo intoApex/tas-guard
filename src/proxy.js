@@ -4,9 +4,10 @@ import { spawn } from "node:child_process";
 import { classify, detectMode } from "./profiles.js";
 import { decide, staticAction } from "./policy.js";
 import { canonical, sha256 } from "./state.js";
+import { TelegramApprover } from "./telegram.js";
 
 export const GUARD_TOOL = "tas_guard_status";
-const VERSION = "0.1.1";
+const VERSION = "0.2.0";
 
 export class LineChannel {
   constructor(readable, writable, onMessage, onBadLine) {
@@ -45,7 +46,7 @@ export class GuardProxy {
    * @param {NodeJS.WritableStream} [o.output] client side (default stdout)
    * @param {(s:string)=>void} [o.log]
    */
-  constructor({ profile, policy, state, upstream, input = process.stdin, output = process.stdout, log = (s) => process.stderr.write("[tas-guard] " + s + "\n") }) {
+  constructor({ profile, policy, state, upstream, approvals = {}, input = process.stdin, output = process.stdout, log = (s) => process.stderr.write("[tas-guard] " + s + "\n") }) {
     this.profile = profile;
     this.policy = policy;
     this.state = state;
@@ -59,6 +60,12 @@ export class GuardProxy {
     this.toUpstream = new Map(); // our id -> { clientId } | { resolve, reject }
     this.toClient = new Map();   // our id -> { upstreamId } | { resolve, reject }
     this.orderLock = Promise.resolve();
+    this.approvalsCfg = approvals;
+    if (approvals.telegram) {
+      this.tg = new TelegramApprover(approvals.telegram, state, log, () => this.status());
+      this.tg.run();
+      log("telegram approvals on");
+    }
 
     // Windows can't spawn .cmd shims (npx, uvx installed via npm) without a shell; quote args for cmd.exe.
     const win = process.platform === "win32";
@@ -81,7 +88,7 @@ export class GuardProxy {
     }
   }
 
-  close() { try { this.child.stdin.end(); this.child.kill(); } catch {} }
+  close() { this.tg?.stop(); try { this.child.stdin.end(); this.child.kill(); } catch {} }
 
   /** Client hung up: let in-flight calls finish (up to 10s) so no order result is lost, then stop. */
   async drainThenClose() {
@@ -230,6 +237,13 @@ export class GuardProxy {
     return `${name}: ${parts.join(" ")}`.trim();
   }
 
+  /** Phone alert when an order-type call is blocked (not for reads or routine blocks of hidden tools). */
+  alertBlocked(info, summary, reason) {
+    if (!this.tg?.notifyBlocked) return;
+    if (!["order", "modify", "close_all", "cancel_all", "funds_out", "leverage", "raw_write"].includes(info.class)) return;
+    this.tg.notify(`🚫 Blocked (${this.state.guard}, ${this.mode})\n${summary}\nWhy: ${reason}`);
+  }
+
   async askHuman(summary, reason) {
     if (!this.clientCaps.elicitation) return null;
     try {
@@ -256,13 +270,15 @@ export class GuardProxy {
 
     if (d.action === "block") {
       this.state.audit({ ...base, outcome: "blocked" });
+      this.alertBlocked(info, summary, d.reason);
       return this.reply(m.id, textResult(`TAS Guard blocked this call. ${d.reason}\nDo not retry with a workaround; tell the user what was blocked and why.`, true));
     }
 
     let approvedBy;
     if (d.action === "approve") {
       const fp = this.fingerprint(name, args);
-      if (this.state.consumeApproval(fp, this.policy.approval_ttl_minutes)) approvedBy = "cli";
+      const prior = this.state.consumeApproval(fp, this.policy.approval_ttl_minutes);
+      if (prior) approvedBy = prior.decided_by || "cli";
       else {
         const human = await this.askHuman(summary, d.reason);
         if (human === true) approvedBy = "client-prompt";
@@ -270,7 +286,29 @@ export class GuardProxy {
           this.state.audit({ ...base, outcome: "denied", approved_by: "client-prompt" });
           return this.reply(m.id, textResult(`The user declined this action in the approval prompt. ${summary}`, true));
         } else {
-          const item = this.state.requestApproval({ fingerprint: fp, tool: name, summary, reason: d.reason });
+          const item = this.state.requestApproval({ fingerprint: fp, tool: name, summary, reason: d.reason, cli_allowed: !(this.tg && this.approvalsCfg.cli === false) });
+          if (this.tg) {
+            let asked = true;
+            try { if (!this.tg.sent.has(item.id)) await this.tg.ask(item, this.mode); } catch (e) { asked = false; this.log("telegram ask failed: " + e.message); }
+            if (asked) {
+              const r = await this.tg.waitFor(item.id);
+              if (r === "approved") {
+                this.state.consumeApproval(fp, this.policy.approval_ttl_minutes);
+                approvedBy = "telegram";
+              } else if (r === "denied") {
+                this.state.audit({ ...base, outcome: "denied", approved_by: "telegram", approval_id: item.id });
+                return this.reply(m.id, textResult(`The user denied this action on their phone. ${summary}\nDo not retry it unless the user asks.`, true));
+              } else {
+                this.state.audit({ ...base, outcome: "held", approval_id: item.id });
+                return this.reply(m.id, textResult(
+                  `TAS Guard sent this action to the user's phone for approval (request ${item.id}) and is still waiting.\n${summary}\nWhy: ${d.reason}\n\n` +
+                  `Ask the user to tap Approve in Telegram (or run: npx tas-guard approve ${item.id}), then repeat exactly the same call within ${this.policy.approval_ttl_minutes} minutes. You must not approve it yourself.`, true));
+              }
+            }
+          }
+        }
+        if (!approvedBy) {
+          const item = this.state.requestApproval({ fingerprint: fp, tool: name, summary, reason: d.reason, cli_allowed: !(this.tg && this.approvalsCfg.cli === false) });
           this.state.audit({ ...base, outcome: "held", approval_id: item.id });
           return this.reply(m.id, textResult(
             `TAS Guard is holding this action for human approval (request ${item.id}).\n${summary}\nWhy: ${d.reason}\n\n` +
@@ -287,6 +325,7 @@ export class GuardProxy {
       const fresh = decide({ info, args, policy: this.policy, usage: this.state.usage(), mode: this.mode, killed: this.state.killed() });
       if (fresh.action === "block") {
         this.state.audit({ ...base, decision: "block", reason: fresh.reason, outcome: "blocked", approved_by: approvedBy });
+        this.alertBlocked(info, summary, fresh.reason);
         return this.reply(m.id, textResult(`TAS Guard blocked this call. ${fresh.reason}\nDo not retry with a workaround; tell the user what was blocked and why.`, true));
       }
       if (fresh.action === "approve" && !approvedBy) {
@@ -309,7 +348,10 @@ export class GuardProxy {
     const text = JSON.stringify(result?.content || "");
     const preview = !!(this.profile?.preview?.result_marker && text.includes(this.profile.preview.result_marker));
     const executed = d.counts && !result?.isError && !preview;
-    if (executed) this.state.recordExecuted(d.order?.value);
+    if (executed) {
+      this.state.recordExecuted(d.order?.value);
+      if (this.tg?.notifyExecuted) this.tg.notify(`✅ Sent to broker (${this.state.guard}, ${this.mode})\n${base.tool}${d.order?.symbol ? ": " + [d.order.side, d.order.qty, d.order.symbol].filter((x) => x !== undefined).join(" ") : ""}${approvedBy ? `\nApproved via ${approvedBy}` : ""}`);
+    }
     this.state.audit({ ...base, outcome: result?.isError ? "upstream_rejected" : preview ? "preview" : "executed", approved_by: approvedBy, counted: executed });
     this.reply(m.id, result);
   }

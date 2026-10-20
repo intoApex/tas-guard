@@ -133,6 +133,39 @@ npx tas-guard pending
 npx tas-guard approve 3f9a1c
 ```
 
+## Phone approvals and kill switch (Telegram)
+
+Get held actions on your phone with **Approve** and **Deny** buttons, alerts when an order is blocked, and a kill switch you can hit from anywhere. It uses your own Telegram bot, so nothing goes through our servers.
+
+```
+npx tas-guard telegram-setup --config ~/tas-guard/alpaca.json
+```
+
+It walks you through creating a bot with @BotFather, waits for you to press Start in your bot, then saves the bot token and your chat id into the guard config. Restart your AI app afterwards.
+
+What you get:
+
+- **Approve / Deny buttons.** The agent's call waits up to 45 seconds (`wait_seconds`) for your tap and then goes through in the same call. If you're slower, the agent is told to retry after you approve.
+- **Alerts** when an order-type call is blocked (`notify_blocked`, on by default) and, optionally, when an order is sent to the broker (`notify_executed`).
+- **Phone commands:** `/status` (limits and today's usage), `/pending` (re-sends anything waiting), `/kill`, `/resume`.
+- **Only you:** taps and commands from any other Telegram account are ignored.
+- **Phone-only approvals:** set `"cli": false` so `tas-guard approve` refuses requests from this guard. That closes the gap where an agent with shell access could run the approve command itself.
+
+```json
+"approvals": {
+  "cli": false,
+  "telegram": {
+    "bot_token": "${TAS_TELEGRAM_BOT_TOKEN}",
+    "chat_id": "123456789",
+    "wait_seconds": 45,
+    "notify_blocked": true,
+    "notify_executed": false
+  }
+}
+```
+
+Several guards can share one bot. Whichever one is listening handles the tap, and the others pick up the decision from the shared state.
+
 ## Kill switch
 
 ```
@@ -168,11 +201,11 @@ Tested on Windows with the Microsoft Store version of Claude Desktop, October 20
 - **Use `cmd /c` to start npx** in `claude_desktop_config.json`: `"command": "cmd", "args": ["/c", "npx", "-y", "tas-guard", "run", "--config", "C:\\Users\\you\\tas-guard\\alpaca.json"]`.
 - **Edit Claude Desktop's config only while the app is fully quit** (system tray, Quit). It rewrites the file while running. The Store version keeps it under `%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\`.
 - **Faster startup:** run `uv tool install alpaca-mcp-server` once and set `"command": "alpaca-mcp-server", "args": []` in the guard file. `uvx` otherwise re-resolves the server on every launch, which adds 10 to 20 seconds.
-- **Approvals:** Claude Desktop doesn't show the in-app approval prompt, so approve held actions with `npx tas-guard approve <id>`.
+- **Approvals:** Claude Desktop doesn't show the in-app approval prompt. Use phone approvals (`telegram-setup`), or approve held actions with `npx tas-guard approve <id>`.
 
 ## Limitations (read these)
 
-- **An agent with shell access could run `tas-guard approve` itself.** If your agent can run terminal commands (Claude Code, Cursor agents), rely on in-client approval prompts or `"unknown_value": "block"` with tight hard limits.
+- **An agent with shell access could run `tas-guard approve` itself**, unless you use phone approvals with `"cli": false`. Even then, an agent that can edit files in `~/.tas-guard` could tamper with state, so run trading agents without shell access to your home folder where you can.
 - **Values use the order's own price.** A market order by quantity has no price, so it needs approval by default. Live price lookup is on the roadmap.
 - **No P&L-based stop yet.** Daily limits cap how much the agent can trade, not how much it can lose.
 - **Quote currency is per symbol** for ccxt (BTC/USDT is in USDT, ETH/BTC is in BTC). Use `symbols_allow` to keep limits meaningful.
@@ -181,7 +214,7 @@ Tested on Windows with the Microsoft Store version of Claude Desktop, October 20
 ## Development
 
 ```
-npm test        # 23 tests: unit + end-to-end through a mock broker over real MCP stdio
+npm test        # 33 tests: unit, end to end through a mock broker over real MCP stdio, and the phone flow against a mock Telegram API
 ```
 
 MIT licensed. Built by [TradingAgentStack](https://tradingagentstack.com), the independent directory of what AI trading tools can do with your money.
