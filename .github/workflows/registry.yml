@@ -1,0 +1,29 @@
+# Publish server.json to the official MCP Registry when a version tag is pushed (e.g. v0.2.3).
+# Uses GitHub OIDC, so no publisher login or token is needed. Publish to npm first: the registry checks
+# that the npm package with the same version exists and carries the matching mcpName.
+name: Publish to MCP Registry
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check versions match
+        run: |
+          P=$(node -p "require('./package.json').version"); S=$(node -p "require('./server.json').version")
+          echo "package.json $P, server.json $S"; test "$P" = "$S"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then test "v$P" = "${GITHUB_REF_NAME}"; fi
+      - name: Install mcp-publisher
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher --help | head -3
+      - name: Log in with GitHub OIDC
+        run: ./mcp-publisher login github-oidc
+      - name: Publish
+        run: ./mcp-publisher publish
