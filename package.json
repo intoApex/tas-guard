@@ -1,16 +1,44 @@
 {
   "name": "tas-guard",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Trading-aware safety proxy for AI agents: puts per-order and daily caps, symbol allowlists, human approvals, a kill switch and a tamper-evident audit log in front of any broker or exchange MCP server.",
+  "mcpName": "io.github.intoApex/tas-guard",
   "type": "module",
-  "bin": { "tas-guard": "src/cli.js" },
-  "files": ["src", "profiles", "schema", "README.md", "LICENSE"],
-  "scripts": { "test": "node --test test/*.test.js" },
-  "keywords": ["mcp", "model-context-protocol", "trading", "ai-agents", "guardrails", "risk", "alpaca", "ccxt", "kill-switch"],
+  "bin": {
+    "tas-guard": "src/cli.js"
+  },
+  "files": [
+    "src",
+    "profiles",
+    "schema",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "trading",
+    "ai-agents",
+    "guardrails",
+    "risk",
+    "alpaca",
+    "ccxt",
+    "kill-switch"
+  ],
   "homepage": "https://tradingagentstack.com/guard/",
-  "repository": { "type": "git", "url": "git+https://github.com/intoApex/tas-guard.git" },
-  "bugs": { "url": "https://github.com/intoApex/tas-guard/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/intoApex/tas-guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/intoApex/tas-guard/issues"
+  },
   "license": "MIT",
   "author": "TradingAgentStack",
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

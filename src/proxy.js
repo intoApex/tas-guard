@@ -7,7 +7,7 @@ import { canonical, sha256 } from "./state.js";
 import { TelegramApprover } from "./telegram.js";
 
 export const GUARD_TOOL = "tas_guard_status";
-const VERSION = "0.2.1";
+const VERSION = "0.2.2";
 
 export class LineChannel {
   constructor(readable, writable, onMessage, onBadLine) {

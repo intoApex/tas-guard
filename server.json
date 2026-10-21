@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.intoApex/tas-guard",
+  "title": "TAS Guard",
+  "description": "Order limits, phone approvals and a kill switch in front of any broker or exchange MCP server.",
+  "version": "0.2.2",
+  "repository": {
+    "url": "https://github.com/intoApex/tas-guard",
+    "source": "github"
+  },
+  "websiteUrl": "https://tradingagentstack.com/guard/",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "tas-guard",
+      "version": "0.2.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "run"
+        },
+        {
+          "type": "named",
+          "name": "--config",
+          "isRequired": true,
+          "format": "filepath",
+          "description": "Path to your guard config: the broker or exchange MCP server to wrap, plus your limits. Create one with: npx tas-guard init alpaca-mcp-server"
+        }
+      ]
+    }
+  ]
+}
