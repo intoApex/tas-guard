@@ -9,12 +9,13 @@ import { State } from "../src/state.js";
 
 const alpaca = loadProfile("alpaca-mcp-server");
 const ccxt = loadProfile("ccxt-mcp-server");
+const robinhood = loadProfile("robinhood-trading-mcp");
 const policy = resolvePolicy({ max_order_value: 500, max_daily_value: 1000, approve_over: 250, live_requires_approval: false });
 const usage = { spent: 0, orders: 0, recent: [] };
 const call = (name, args, extra = {}) => decide({ info: classify(alpaca, name), args, policy, usage, mode: "paper", killed: false, ...extra });
 
 test("built-in profiles load and every tool has a valid class", () => {
-  assert.deepEqual(listBuiltinProfiles().sort(), ["alpaca-mcp-server", "ccxt-mcp-server"]);
+  assert.deepEqual(listBuiltinProfiles().sort(), ["alpaca-mcp-server", "ccxt-mcp-server", "robinhood-trading-mcp"]);
   for (const s of listBuiltinProfiles()) assert.ok(Object.keys(loadProfile(s).tools).length > 5);
 });
 
@@ -28,6 +29,23 @@ test("classification: profile, pattern, missing, heuristics", () => {
   assert.equal(classify(null, "get_quote").class, "read");
   assert.equal(classify(null, "quote", { annotations: { readOnlyHint: true } }).class, "read");
   assert.equal(classify(null, "get_and_trade", { annotations: { destructiveHint: true } }).class, "unknown");
+});
+
+test("robinhood profile: classes, no guessed order fields, fails safe", () => {
+  assert.equal(Object.keys(robinhood.tools).length, 94);
+  assert.equal(classify(robinhood, "place_equity_order").class, "order");
+  assert.equal(classify(robinhood, "place_option_order").multiplier, 100);
+  assert.equal(classify(robinhood, "review_equity_order").class, "read");
+  assert.equal(classify(robinhood, "cancel_crypto_order").class, "cancel");
+  assert.equal(classify(robinhood, "exercise_option").class, "other_write");
+  assert.equal(classify(robinhood, "add_legend_indicator").class, "benign_write");
+  assert.equal(classify(robinhood, "get_new_thing").source, "profile-pattern");
+  assert.equal(classify(robinhood, "transfer_funds").class, "unknown");
+  assert.equal(detectMode(robinhood, {}), "live");
+  const d = (name, p) => decide({ info: classify(robinhood, name), args: { symbol: "AAPL", quantity: 1 }, policy: resolvePolicy(p), usage, mode: "live", killed: false }).action;
+  assert.equal(d("place_equity_order", { live_requires_approval: false }), "approve", "value unknown without documented fields");
+  assert.equal(d("place_equity_order", { symbols_allow: ["AAPL"] }), "block", "allow list can't be checked");
+  assert.equal(d("exercise_option", {}), "approve");
 });
 
 test("order value: notional, qty x price, option multiplier, multi-leg, junk", () => {
