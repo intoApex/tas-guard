@@ -2,7 +2,8 @@
 // TAS Guard CLI. `run` is what your MCP client starts; the other commands are for you, the human.
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { GuardProxy, VERSION } from "./proxy.js";
 import { State, defaultStateDir } from "./state.js";
 import { loadProfile, listBuiltinProfiles, PROFILE_DIR } from "./profiles.js";
@@ -15,6 +16,9 @@ const HELP = `TAS Guard ${VERSION}: trading-aware safety proxy for AI agents usi
 Run (your MCP client starts this):
   tas-guard run --config guard.json
   tas-guard run --profile alpaca-mcp-server [--policy policy.json] [--name alpaca] -- <upstream command> [args...]
+
+Try it with no broker account (built-in paper broker, simulated prices):
+  tas-guard demo                 add this as an MCP server in your AI app, then ask it to trade
 
 Human controls (run these yourself; never let the agent run them):
   tas-guard pending              list actions waiting for approval
@@ -80,10 +84,23 @@ function cmdRun(argv) {
   proxy.onUpstreamExit = (code) => process.exit(code ?? 1);
 }
 
+// `tas-guard demo`: the guard in front of a built-in fake paper broker. No broker account needed.
+export const DEMO_POLICY = { max_order_value: 2000, max_daily_value: 5000, approve_over: 1000, symbols_allow: ["SPY", "QQQ", "AAPL", "MSFT", "NVDA"], live_requires_approval: false };
+function cmdDemo(argv) {
+  const broker = join(dirname(fileURLToPath(import.meta.url)), "demo-broker.js");
+  const profile = loadProfile("alpaca-mcp-server");
+  const policy = resolvePolicy(DEMO_POLICY);
+  const state = new State(defaultStateDir(), "demo");
+  process.stderr.write("[tas-guard] demo: guarding a built-in paper broker (simulated prices, no real money)\n");
+  const proxy = new GuardProxy({ profile, policy, state, approvals: {}, upstream: { command: process.execPath, args: [broker], env: { ALPACA_PAPER_TRADE: "true" } } });
+  proxy.onUpstreamExit = (code) => process.exit(code ?? 1);
+}
+
 const state = (argv) => new State(defaultStateDir(), flag(argv, "--name", "default"));
 
 const commands = {
   run: cmdRun,
+  demo: cmdDemo,
   pending() {
     const items = new State().pending().items.filter((i) => i.status === "pending");
     if (!items.length) return console.log("No actions are waiting for approval.");

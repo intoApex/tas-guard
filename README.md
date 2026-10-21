@@ -14,6 +14,16 @@ AI client  ──►  TAS Guard  ──►  Alpaca / CCXT / any trading MCP serv
 
 Zero dependencies. About 800 lines of plain JavaScript you can read in one sitting.
 
+## Try it in 10 seconds (no broker account)
+
+`tas-guard demo` runs the guard in front of a built-in paper broker with simulated prices. Add it to your AI app as an MCP server:
+
+```json
+{ "mcpServers": { "tas-guard-demo": { "command": "npx", "args": ["-y", "tas-guard", "demo"] } } }
+```
+
+(On Windows use `"command": "cmd", "args": ["/c", "npx", "-y", "tas-guard", "demo"]`.) Then ask your agent to buy 1 SPY at $580 (allowed), 2 SPY at $580 (held for your approval), 10 SPY (blocked: over the $2,000 per-order limit) or 1 TSLA (blocked: not on the allow list). Approve held orders with `npx tas-guard approve <id>`.
+
 ## Why not a generic MCP gateway?
 
 Generic gateways decide per *tool*: "createOrder is critical, require approval." They can't tell a $50 order from a $50,000 one, so you end up approving everything or nothing.

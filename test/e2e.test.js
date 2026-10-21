@@ -214,3 +214,26 @@ test("client hang-up: in-flight calls still get their answers (no lost order res
   const ids = out.trim().split("\n").map((l) => JSON.parse(l).id).sort();
   assert.deepEqual(ids, [1, 2, 3]);
 });
+
+test("tas-guard demo: starts without a broker, lists tools, allows small orders, holds and blocks the rest", async () => {
+  const home = mkdtempSync(join(tmpdir(), "tg-demo-"));
+  const p = spawn(process.execPath, [CLI, "demo"], { env: { ...process.env, TAS_GUARD_HOME: home }, stdio: ["pipe", "pipe", "ignore"] });
+  const msgs = [
+    { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "1" } } },
+    { jsonrpc: "2.0", id: 2, method: "tools/list" },
+    { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "place_stock_order", arguments: { symbol: "SPY", side: "buy", qty: "1", limit_price: "580" } } },
+    { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "place_stock_order", arguments: { symbol: "SPY", side: "buy", qty: "2", limit_price: "580" } } },
+    { jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "place_stock_order", arguments: { symbol: "SPY", side: "buy", qty: "10", limit_price: "580" } } },
+    { jsonrpc: "2.0", id: 6, method: "tools/call", params: { name: "place_stock_order", arguments: { symbol: "TSLA", side: "buy", qty: "1", limit_price: "250" } } },
+  ];
+  p.stdin.end(msgs.map((m) => JSON.stringify(m)).join("\n") + "\n");
+  let out = ""; p.stdout.on("data", (d) => (out += d));
+  await new Promise((r) => p.on("exit", r));
+  const by = Object.fromEntries(out.trim().split("\n").map((l) => JSON.parse(l)).map((m) => [m.id, m]));
+  const names = by[2].result.tools.map((t) => t.name);
+  assert.ok(names.includes("place_stock_order") && names.includes("tas_guard_status") && !names.includes("update_account_config"));
+  assert.ok(!by[3].result.isError, "580 is within limits");
+  assert.match(by[4].result.content[0].text, /holding this action/);
+  assert.match(by[5].result.content[0].text, /per-order limit/);
+  assert.match(by[6].result.content[0].text, /not on the allow list/);
+});

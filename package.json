@@ -1,6 +1,6 @@
 {
   "name": "tas-guard",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Trading-aware safety proxy for AI agents: puts per-order and daily caps, symbol allowlists, human approvals, a kill switch and a tamper-evident audit log in front of any broker or exchange MCP server.",
   "mcpName": "io.github.intoApex/tas-guard",
   "type": "module",
