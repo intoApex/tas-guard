@@ -198,10 +198,11 @@ npx tas-guard verify-log      # detects edited or deleted lines
 
 ## Connector profiles
 
-A profile says what each tool of a server can do with money and where its order fields live. The schema is [`schema/connector-profile.v1.json`](schema/connector-profile.v1.json). Built-in profiles are verified against each server's source code, with the commit recorded:
+A profile says what each tool of a server can do with money and where its order fields live. The schema is [`schema/connector-profile.v1.json`](schema/connector-profile.v1.json). Built-in profiles are verified against each server's source code or official docs, with the commit or page recorded:
 
 - `alpaca-mcp-server`: alpacahq/alpaca-mcp-server @ 2a973a0
 - `ccxt-mcp-server`: ccxt/ccxt `mcp/` @ 310bf4b
+- `robinhood-trading-mcp`: Robinhood's hosted Trading MCP, from the 94-tool table in Robinhood's ["Trading with your agent"](https://robinhood.com/us/en/support/articles/trading-with-your-agent/) article (2026-10-21). The server is closed source and Robinhood publishes no argument names, so order values can't be read: every order needs approval, and a `symbols_allow` list blocks orders.
 
 Using a server without a profile? `"profile": "auto"` classifies tools by name and MCP annotations, and blocks anything it doesn't recognize. Profiles for more brokers are welcome as PRs.
 
@@ -226,7 +227,7 @@ Tested on Windows with the Microsoft Store version of Claude Desktop, October 20
 ## Development
 
 ```
-npm test        # 34 tests: unit, end to end through a mock broker over real MCP stdio, and the phone flow against a mock Telegram API
+npm test        # 36 tests: unit, end to end through a mock broker over real MCP stdio, and the phone flow against a mock Telegram API
 ```
 
 MIT licensed. Built by [TradingAgentStack](https://tradingagentstack.com), the independent directory of what AI trading tools can do with your money.
