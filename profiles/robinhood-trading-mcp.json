@@ -1,0 +1,321 @@
+{
+  "$schema": "https://tradingagentstack.com/schema/connector-profile.v1.json",
+  "profile_version": 1,
+  "slug": "robinhood-trading-mcp",
+  "name": "Robinhood Trading MCP",
+  "vendor": "Robinhood",
+  "listing": "https://tradingagentstack.com/tool/robinhood-trading-mcp/",
+  "source": "https://robinhood.com/us/en/support/articles/trading-with-your-agent/",
+  "verified_against": "Robinhood support article 'Trading with your agent' (robinhood.com/us/en/support/articles/trading-with-your-agent/), tool table of 94 tools, read 2026-10-21; endpoint from 'Agentic trading overview' (robinhood.com/us/en/support/articles/agentic-trading-overview/). The server is hosted and closed source; Robinhood publishes tool names but no argument schemas.",
+  "last_checked": "2026-10-21",
+  "quote_currency": "USD",
+  "mode": {
+    "default": "live",
+    "note": "Hosted at https://agent.robinhood.com/mcp/trading. No paper mode is documented; agents trade real money in the dedicated MCP (agentic) account and can read all your accounts. Trade approvals are off by default for MCP accounts and still rolling out."
+  },
+  "tools": {
+    "get_accounts": {
+      "class": "read"
+    },
+    "get_portfolio": {
+      "class": "read"
+    },
+    "get_realized_pnl": {
+      "class": "read"
+    },
+    "get_pnl_trade_history": {
+      "class": "read"
+    },
+    "search": {
+      "class": "read"
+    },
+    "get_limited_margin_upgrade_info": {
+      "class": "read"
+    },
+    "get_trade_approvals": {
+      "class": "read"
+    },
+    "get_trade_approval_setting": {
+      "class": "read"
+    },
+    "get_watchlists": {
+      "class": "read"
+    },
+    "get_watchlist_items": {
+      "class": "read"
+    },
+    "get_option_watchlist": {
+      "class": "read"
+    },
+    "get_popular_watchlists": {
+      "class": "read"
+    },
+    "get_equity_historicals": {
+      "class": "read"
+    },
+    "get_equity_fundamentals": {
+      "class": "read"
+    },
+    "get_financials": {
+      "class": "read"
+    },
+    "get_equity_price_book": {
+      "class": "read"
+    },
+    "get_equity_technical_indicators": {
+      "class": "read"
+    },
+    "get_earnings_results": {
+      "class": "read"
+    },
+    "get_earnings_calendar": {
+      "class": "read"
+    },
+    "get_indexes": {
+      "class": "read"
+    },
+    "get_index_quotes": {
+      "class": "read"
+    },
+    "get_equity_news": {
+      "class": "read"
+    },
+    "get_earnings_transcript": {
+      "class": "read"
+    },
+    "get_sec_filing_index": {
+      "class": "read"
+    },
+    "get_sec_filing": {
+      "class": "read"
+    },
+    "get_sec_filing_facts": {
+      "class": "read"
+    },
+    "get_sec_filing_facts_catalog": {
+      "class": "read"
+    },
+    "get_index_historicals": {
+      "class": "read"
+    },
+    "get_politician_trades": {
+      "class": "read"
+    },
+    "get_equity_analyst_ratings": {
+      "class": "read"
+    },
+    "get_equity_positions": {
+      "class": "read"
+    },
+    "get_equity_tax_lots": {
+      "class": "read"
+    },
+    "get_equity_quotes": {
+      "class": "read"
+    },
+    "get_equity_orders": {
+      "class": "read"
+    },
+    "get_equity_tradability": {
+      "class": "read"
+    },
+    "get_option_level_upgrade_info": {
+      "class": "read"
+    },
+    "get_option_chains": {
+      "class": "read"
+    },
+    "get_option_historicals": {
+      "class": "read"
+    },
+    "get_option_instruments": {
+      "class": "read"
+    },
+    "get_option_quotes": {
+      "class": "read"
+    },
+    "get_option_positions": {
+      "class": "read"
+    },
+    "get_option_orders": {
+      "class": "read"
+    },
+    "get_currency_pairs": {
+      "class": "read"
+    },
+    "get_crypto_quotes": {
+      "class": "read"
+    },
+    "get_crypto_positions": {
+      "class": "read"
+    },
+    "get_crypto_orders": {
+      "class": "read"
+    },
+    "get_crypto_account_onboarding_info": {
+      "class": "read"
+    },
+    "get_crypto_tax_lots": {
+      "class": "read"
+    },
+    "get_scans": {
+      "class": "read"
+    },
+    "get_scanner_filter_specs": {
+      "class": "read"
+    },
+    "run_scan": {
+      "class": "read"
+    },
+    "get_scanner_datapoints": {
+      "class": "read"
+    },
+    "preview_scan": {
+      "class": "read"
+    },
+    "get_alerts": {
+      "class": "read"
+    },
+    "get_alert_log": {
+      "class": "read"
+    },
+    "get_advanced_orders": {
+      "class": "read"
+    },
+    "get_legend_charts": {
+      "class": "read"
+    },
+    "get_legend_indicators": {
+      "class": "read"
+    },
+    "get_legend_indicator_catalog": {
+      "class": "read"
+    },
+    "get_legend_layouts": {
+      "class": "read"
+    },
+    "review_equity_order": {
+      "class": "read",
+      "note": "Simulates the order and returns pre-trade warnings; places nothing."
+    },
+    "review_option_order": {
+      "class": "read",
+      "note": "Simulates the order and returns pre-trade warnings; places nothing."
+    },
+    "review_advanced_order": {
+      "class": "read",
+      "note": "Simulates the order and returns pre-trade warnings; places nothing."
+    },
+    "preview_crypto_order": {
+      "class": "read",
+      "note": "Previews a crypto order; places nothing."
+    },
+    "create_watchlist": {
+      "class": "benign_write"
+    },
+    "update_watchlist": {
+      "class": "benign_write"
+    },
+    "follow_watchlist": {
+      "class": "benign_write"
+    },
+    "unfollow_watchlist": {
+      "class": "benign_write"
+    },
+    "add_to_watchlist": {
+      "class": "benign_write"
+    },
+    "remove_from_watchlist": {
+      "class": "benign_write"
+    },
+    "add_option_to_watchlist": {
+      "class": "benign_write"
+    },
+    "remove_option_from_watchlist": {
+      "class": "benign_write"
+    },
+    "create_scan": {
+      "class": "benign_write"
+    },
+    "update_scan_filters": {
+      "class": "benign_write"
+    },
+    "update_scan_config": {
+      "class": "benign_write"
+    },
+    "create_alert": {
+      "class": "benign_write"
+    },
+    "update_alert": {
+      "class": "benign_write"
+    },
+    "delete_alert": {
+      "class": "benign_write"
+    },
+    "mark_alerts_read": {
+      "class": "benign_write"
+    },
+    "set_legend_chart_settings": {
+      "class": "benign_write"
+    },
+    "add_legend_indicator": {
+      "class": "benign_write"
+    },
+    "update_legend_indicator": {
+      "class": "benign_write"
+    },
+    "remove_legend_indicator": {
+      "class": "benign_write"
+    },
+    "place_equity_order": {
+      "class": "order",
+      "asset_class": "equity",
+      "note": "Robinhood's docs don't publish argument names, so no order fields are mapped: the value can't be computed and the call needs approval (or is blocked when symbols_allow is set)."
+    },
+    "place_option_order": {
+      "class": "order",
+      "asset_class": "option",
+      "multiplier": 100,
+      "note": "Single-leg only (Robinhood agents can't place multi-leg options orders). Robinhood's docs don't publish argument names, so no order fields are mapped: the value can't be computed and the call needs approval (or is blocked when symbols_allow is set)."
+    },
+    "place_crypto_order": {
+      "class": "order",
+      "asset_class": "crypto",
+      "note": "Robinhood's docs don't publish argument names, so no order fields are mapped: the value can't be computed and the call needs approval (or is blocked when symbols_allow is set)."
+    },
+    "place_advanced_order": {
+      "class": "order",
+      "note": "Submits an advanced order. Robinhood's docs don't publish argument names, so no order fields are mapped: the value can't be computed and the call needs approval (or is blocked when symbols_allow is set)."
+    },
+    "cancel_equity_order": {
+      "class": "cancel"
+    },
+    "cancel_option_order": {
+      "class": "cancel"
+    },
+    "cancel_crypto_order": {
+      "class": "cancel"
+    },
+    "cancel_advanced_order": {
+      "class": "cancel"
+    },
+    "cancel_option_exercise": {
+      "class": "cancel",
+      "note": "Cancels a pending option exercise."
+    },
+    "decline_trade_approval": {
+      "class": "cancel",
+      "note": "Declines a pending trade approval request, so the trade does not go ahead."
+    },
+    "exercise_option": {
+      "class": "other_write",
+      "note": "Exercises an option contract."
+    }
+  },
+  "patterns": [
+    {
+      "match": "^get_",
+      "class": "read"
+    }
+  ]
+}
