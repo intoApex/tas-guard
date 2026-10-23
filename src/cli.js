@@ -10,6 +10,9 @@ import { loadProfile, listBuiltinProfiles, PROFILE_DIR } from "./profiles.js";
 import { resolvePolicy } from "./policy.js";
 import { readJson } from "./profiles.js";
 import { findChatId } from "./telegram.js";
+import { RpcGuard } from "./rpc.js";
+import { resolveOnchainPolicy } from "./onchain-policy.js";
+import { startMockEvm, DEMO_REVERT_CONTRACT } from "./demo-evm.js";
 
 const HELP = `TAS Guard ${VERSION}: trading-aware safety proxy for AI agents using broker and exchange MCP servers.
 
@@ -19,6 +22,10 @@ Run (your MCP client starts this):
 
 Try it with no broker account (built-in paper broker, simulated prices):
   tas-guard demo                 add this as an MCP server in your AI app, then ask it to trade
+
+Onchain (EVM) mode: a local JSON-RPC proxy your agent uses as its RPC URL:
+  tas-guard rpc --config guard.json [--listen 127.0.0.1:8547]
+  tas-guard rpc-demo [--port 8547]   the same, in front of a built-in mock chain (no keys, no money)
 
 Human controls (run these yourself; never let the agent run them):
   tas-guard pending              list actions waiting for approval
@@ -96,11 +103,77 @@ function cmdDemo(argv) {
   proxy.onUpstreamExit = (code) => process.exit(code ?? 1);
 }
 
+// `tas-guard rpc`: the onchain (EVM) guard, an HTTP JSON-RPC proxy in front of your upstream RPC.
+function parseListen(s, portFlag) {
+  const m = String(s).match(/^(.*):(\d+)$/);
+  const host = m ? m[1].replace(/^\[|\]$/g, "") : "127.0.0.1";
+  const port = portFlag !== undefined ? Number(portFlag) : m ? Number(m[2]) : 8547;
+  return [host || "127.0.0.1", port];
+}
+function serveUntilSignal(guard) {
+  const stop = () => guard.close().then(() => process.exit(0));
+  process.on("SIGINT", stop);
+  process.on("SIGTERM", stop);
+}
+async function cmdRpc(argv) {
+  const cfgPath = flag(argv, "--config");
+  if (!cfgPath) throw new Error("Usage: tas-guard rpc --config guard.json");
+  const path = resolve(cfgPath);
+  const cfg = expandEnv(readJson(path));
+  if (!cfg.upstream_rpc) throw new Error(`${path}: "upstream_rpc" is required (your RPC provider URL; use \${VAR} for the API key)`);
+  const policy = resolveOnchainPolicy(cfg.onchain || {});
+  const state = new State(cfg.state_dir ? resolve(dirname(path), cfg.state_dir) : defaultStateDir(), cfg.name || "evm");
+  const guard = new RpcGuard({ upstream: cfg.upstream_rpc, headers: cfg.upstream_headers || {}, wallets: cfg.wallets, policy, state, approvals: cfg.approvals || {} });
+  const [host, port] = parseListen(flag(argv, "--listen", cfg.listen || "127.0.0.1:8547"), flag(argv, "--port"));
+  await guard.listen(host, port);
+  serveUntilSignal(guard);
+}
+
+// `tas-guard rpc-demo`: the onchain guard in front of a built-in mock chain (Base, chain id 8453).
+export const DEMO_WALLET = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"; // well-known public test account (Hardhat #0)
+const DEMO_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+const DEMO_FRIEND = "0x1111111111111111111111111111111111111111";
+export const DEMO_ONCHAIN = {
+  chains_allow: [8453], native_usd: { 8453: 3000 },
+  tokens: { [DEMO_USDC]: { symbol: "USDC", decimals: 6, usd_price: "stable" } },
+  max_tx_usd: 100, max_daily_usd: 300, approve_over_usd: 25, max_tx_per_minute: 10,
+  recipients_allow: [DEMO_FRIEND], contracts_allow: [DEMO_REVERT_CONTRACT],
+};
+async function cmdRpcDemo(argv) {
+  const chain = await startMockEvm({ chainId: 8453, rawSender: DEMO_WALLET });
+  const state = new State(defaultStateDir(), "evm-demo");
+  const guard = new RpcGuard({ upstream: chain.url, wallets: [DEMO_WALLET], policy: resolveOnchainPolicy(DEMO_ONCHAIN), state });
+  const url = await guard.listen("127.0.0.1", Number(flag(argv, "--port", 8547)));
+  const word = (h) => h.replace(/^0x/, "").padStart(64, "0");
+  const req = (method, params) => `curl -s ${url} -H 'content-type: application/json' -d '${JSON.stringify({ jsonrpc: "2.0", id: 1, method, params })}'`;
+  const tx = (to, value, data) => [{ from: DEMO_WALLET, to, ...(value ? { value } : {}), ...(data ? { data } : {}) }];
+  process.stderr.write(`[tas-guard] rpc-demo: guarding a mock Base chain (no keys, no real money). Point any EVM agent at ${url}
+  Limits: $100 per transaction, $300 per day, approval over $25, ETH = $3,000, USDC is a known stablecoin. Wallet: ${DEMO_WALLET}
+
+  Try these in another terminal:
+  1. Allowed: send 0.005 ETH ($15) to a known address
+     ${req("eth_sendTransaction", tx(DEMO_FRIEND, "0x11c37937e08000"))}
+  2. Held for you: send 30 USDC to a new address (then run: npx tas-guard approve <id>)
+     ${req("eth_sendTransaction", tx(DEMO_USDC, null, "0xa9059cbb" + word("2222222222222222222222222222222222222222") + word((30_000_000).toString(16))))}
+  3. Blocked: unlimited USDC approval
+     ${req("eth_sendTransaction", tx(DEMO_USDC, null, "0x095ea7b3" + word("3333333333333333333333333333333333333333") + "f".repeat(64)))}
+  4. Blocked by the pre-flight revert check: a call that reverts
+     ${req("eth_sendTransaction", tx(DEMO_REVERT_CONTRACT, null, "0xd0e30db0"))}
+  5. Reads pass straight through:
+     ${req("eth_blockNumber", [])}
+  6. What the agent is working under:
+     ${req("tas_guardStatus", [])}
+`);
+  serveUntilSignal({ close: async () => { await guard.close(); await chain.close(); } });
+}
+
 const state = (argv) => new State(defaultStateDir(), flag(argv, "--name", "default"));
 
 const commands = {
   run: cmdRun,
   demo: cmdDemo,
+  rpc: cmdRpc,
+  "rpc-demo": cmdRpcDemo,
   pending() {
     const items = new State().pending().items.filter((i) => i.status === "pending");
     if (!items.length) return console.log("No actions are waiting for approval.");

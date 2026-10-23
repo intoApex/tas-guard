@@ -12,7 +12,9 @@ AI client  ──►  TAS Guard  ──►  Alpaca / CCXT / any trading MCP serv
                    └─ logs: every decision, hash-chained
 ```
 
-Zero dependencies. About 800 lines of plain JavaScript you can read in one sitting.
+Zero dependencies. About 2,000 lines of plain JavaScript you can read in one sitting.
+
+**New in 0.3: [onchain (EVM) mode](#onchain-evm-mode).** The same limits, approvals, kill switch and audit log for agents that hold their own wallet: `tas-guard rpc` is a local JSON-RPC endpoint your agent uses as its RPC URL.
 
 ## Try it in 10 seconds (no broker account)
 
@@ -206,6 +208,123 @@ A profile says what each tool of a server can do with money and where its order 
 
 Using a server without a profile? `"profile": "auto"` classifies tools by name and MCP annotations, and blocks anything it doesn't recognize. Profiles for more brokers are welcome as PRs.
 
+## Onchain (EVM) mode
+
+For agents that sign and send their own transactions (AgentKit, viem, ethers, web3.py, your own bot), `tas-guard rpc` runs a local JSON-RPC endpoint. Point the agent's RPC URL at it instead of at your provider:
+
+```
+AI agent ──► http://127.0.0.1:8547 (TAS Guard) ──► your RPC provider (Alchemy, Infura, a node...)
+                   │
+                   ├─ reads (balances, calls, logs, gas...): passed through untouched
+                   ├─ sends and signatures: decoded, checked, then forwarded, held for you, or refused
+                   └─ logs: every decision, in the same hash-chained audit log
+```
+
+Try it with no chain, no keys and no money: `npx tas-guard rpc-demo` starts the guard in front of a built-in mock Base node and prints `curl` commands that get allowed, held, and blocked.
+
+### What it checks
+
+Only the methods that can move money are touched; everything else goes straight to your provider.
+
+| Method | What the guard reads |
+|---|---|
+| `eth_sendRawTransaction` | Decodes the signed transaction (legacy, EIP-2930, EIP-1559): chain id, `to`, value, calldata. Its nonce must match one of your `wallets`. |
+| `eth_sendTransaction` | The transaction object; `from` must be one of your `wallets`. |
+| `eth_signTypedData_v4` (and v1/v3) | ERC-2612 and DAI permits and Uniswap Permit2 (`PermitSingle`, `PermitBatch`, `PermitTransferFrom`) are treated as token approvals: spender, token, amount, deadline. Other typed data asks you. |
+| `personal_sign` / `eth_sign` | `personal_sign` asks you; `eth_sign` (signs a raw hash, which can be a transaction) is blocked. |
+| Any other `eth_send*`, `eth_sign*`, `personal_*`, `wallet_*` | Blocked: the guard can't decode them (`eth_signTransaction`, `eth_sendUserOperation`, `wallet_sendCalls`, `personal_sendTransaction`...). |
+
+Calldata is read by 4-byte selector: native transfers, ERC-20 `transfer`, `transferFrom`, `approve`, `increaseAllowance`, ERC-721/1155 `setApprovalForAll` and Permit2 `approve`. Anything else is a generic contract call.
+
+For each send or signature, in this order:
+
+1. Kill switch on → block (reads still work).
+2. Sender not one of your `wallets` → block.
+3. Chain not on `chains_allow`, signed for a different chain than the upstream, or no replay protection (pre-EIP-155) → block.
+4. More than `max_tx_per_minute` or `max_tx_per_day` → block.
+5. Unlimited allowance (≥ 2^255, max uint, Permit2 max uint160) → block. `setApprovalForAll(…, true)` → block. Revokes (`approve(x, 0)`, `setApprovalForAll(x, false)`) are allowed.
+6. USD value over `max_tx_usd`, or today's total would pass `max_daily_usd` → block. An allowance worth more than `max_tx_usd` is blocked too. These are hard limits; approval can't override them.
+7. Pre-flight revert check: `eth_call` and `eth_estimateGas` from your wallet at `latest`. If either fails → block, with the revert reason (`Vault: deposits are paused`, `ERC20: transfer amount exceeds balance`...).
+8. Ask a human if: value over `approve_over_usd`, value can't be priced (`unknown_value`), recipient not on `recipients_allow` (`new_recipient`), contract or spender not on `contracts_allow` (`unknown_contract`), or it's an approval or permit (`token_approval`).
+9. Otherwise → forward.
+
+USD values come from your config, not a price feed: `native_usd` per chain and a `tokens` list (`"usd_price": "stable"` for stablecoins). Only sends that the upstream accepted count toward daily totals. Sends run one at a time and limits are re-checked just before forwarding.
+
+### Config (Base, USDC)
+
+```json
+{
+  "name": "base-agent",
+  "upstream_rpc": "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+  "listen": "127.0.0.1:8547",
+  "wallets": ["0xYourAgentWalletAddress"],
+  "onchain": {
+    "chains_allow": [8453],
+    "native_usd": { "8453": 3000 },
+    "tokens": {
+      "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913": { "symbol": "USDC", "decimals": 6, "usd_price": "stable" }
+    },
+    "max_tx_usd": 100,
+    "max_daily_usd": 500,
+    "approve_over_usd": 25,
+    "max_tx_per_minute": 3,
+    "max_tx_per_day": 20,
+    "recipients_allow": [],
+    "contracts_allow": [],
+    "unlimited_approval": "block"
+  },
+  "approvals": {
+    "telegram": { "bot_token": "${TAS_TELEGRAM_BOT_TOKEN}", "chat_id": "123456789" }
+  }
+}
+```
+
+```
+ALCHEMY_API_KEY=... npx tas-guard rpc --config ~/tas-guard/base.json
+```
+
+`${VAR}` is read from the environment. The upstream URL (and any key in it) is never logged, audited or returned to the agent; only its host is shown. The full schema, with every setting and its default, is [`schema/onchain-guard.v1.json`](schema/onchain-guard.v1.json). Unknown settings are rejected, so a typo can't silently fall back to a default.
+
+| Setting | Default | |
+|---|---|---|
+| `chains_allow` | `[]` (any) | Chain ids; others are blocked |
+| `max_tx_usd`, `max_daily_usd` | 100, 500 | Hard limits |
+| `max_tx_per_minute`, `max_tx_per_day` | 3, 20 | Hard limits |
+| `approve_over_usd` | 50 | Ask above this |
+| `unknown_value` | `approve` | Value can't be priced |
+| `recipients_allow` / `new_recipient` | `[]` / `approve` | Your own wallets always count as known |
+| `contracts_allow` / `unknown_contract` | `[]` / `approve` | Contract calls and approval spenders |
+| `token_approval` | `approve` | Any approve, permit or Permit2 |
+| `unlimited_approval`, `approval_for_all` | `block`, `block` | |
+| `typed_data`, `personal_sign`, `eth_sign` | `approve`, `approve`, `block` | |
+| `unsupported_methods` | `block` | |
+| `preflight` | `true` | |
+| `approval_ttl_minutes` | 15 | |
+
+### Point your agent at it
+
+- **viem / AgentKit (`ViemWalletProvider`):** `http("http://127.0.0.1:8547", { timeout: 900_000 })`. viem's default 10-second timeout is shorter than a human approval.
+- **ethers v6:** `new JsonRpcProvider("http://127.0.0.1:8547")`. Its requests time out after 5 minutes; if you approve later, the agent resending the same signed transaction picks up the approval.
+- **web3.py:** `Web3(Web3.HTTPProvider("http://127.0.0.1:8547", request_kwargs={"timeout": 900}))`.
+
+The agent can call `tas_guardStatus` on the RPC to see its limits and today's usage.
+
+### Approvals, kill switch and audit log
+
+They work exactly as in MCP mode and share the same state. A held request stays open until you approve it with `npx tas-guard approve <id>` or on your phone (the Telegram message shows the chain, contract, token, amount, USD value and reason), then it's forwarded and the agent gets the transaction hash. Denied or unanswered within `approval_ttl_minutes` → the agent gets a JSON-RPC error. If the agent's client gives up first, sending the same signed transaction again after you approve goes through once.
+
+`npx tas-guard kill` (or `/kill` on your phone) blocks every send and signature on every guard; reads keep working. `npx tas-guard log` and `verify-log` cover onchain decisions too.
+
+### Limitations (onchain)
+
+- **Wallets must be configured.** The guard has no secp256k1 public-key recovery, so it can't prove who signed a raw transaction. It matches the transaction's nonce against your `wallets` and blocks anything that doesn't fit. A transaction signed by another key whose nonce happens to match would be treated as yours, though every policy check on its contents still applies.
+- **The pre-flight is a revert check, not a full simulation.** `eth_call` + `eth_estimateGas` at `latest` catch reverts and missing funds. They don't show balance changes, and the chain can change between the check and inclusion.
+- **Generic contract calls are priced by their native value only.** Tokens moved inside a call (a swap through a router you already approved, say) don't count toward USD limits. That's why unknown contracts and every approval ask you by default; keep `contracts_allow` short.
+- **Prices are static.** `native_usd` and `usd_price` come from your config; tokens not listed are unpriced (`unknown_value`).
+- **It only protects agents that use this RPC URL.** Wallets that broadcast through their own API (Coinbase CDP server wallets, ERC-4337 bundlers, a second RPC) bypass it. User operations, EIP-7702 and blob transactions are blocked, not decoded.
+- **EVM only.** Solana isn't supported yet.
+- **Same caveat as MCP mode:** an agent with shell access could run `tas-guard approve` itself unless you use phone approvals with `"cli": false`.
+
 ## Windows and Claude Desktop notes
 
 Tested on Windows with the Microsoft Store version of Claude Desktop, October 2026.
@@ -227,7 +346,8 @@ Tested on Windows with the Microsoft Store version of Claude Desktop, October 20
 ## Development
 
 ```
-npm test        # 36 tests: unit, end to end through a mock broker over real MCP stdio, and the phone flow against a mock Telegram API
+npm test        # 61 tests: unit, end to end through a mock broker over real MCP stdio, the phone flow against a mock Telegram API,
+                # and onchain mode (transaction decoding, policy, and the RPC proxy against a mock EVM node)
 ```
 
 MIT licensed. Built by [TradingAgentStack](https://tradingagentstack.com), the independent directory of what AI trading tools can do with your money.
