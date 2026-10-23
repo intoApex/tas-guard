@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tradingagentstack.com/schema/onchain-guard.v1.json",
+  "title": "TAS Guard onchain (EVM) config v1",
+  "description": "Config for `tas-guard rpc`: a local JSON-RPC proxy that an onchain agent uses as its RPC URL. Reads pass through to upstream_rpc; sends and signatures are decoded and checked against `onchain` first. Strings may use ${VAR} to read environment variables, so API keys can stay out of the file.",
+  "type": "object",
+  "required": ["upstream_rpc", "wallets"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string", "description": "Guard name, used for daily usage and the audit log. Default: evm." },
+    "upstream_rpc": { "type": "string", "description": "Your RPC provider URL, e.g. https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}. Never logged; only its host is shown." },
+    "upstream_headers": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Extra headers for the upstream, e.g. an API key header." },
+    "listen": { "type": "string", "description": "host:port to listen on. Default 127.0.0.1:8547. Keep it on loopback." },
+    "wallets": {
+      "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/address" },
+      "description": "The agent's wallet address(es). Needed because the guard can't recover the sender of a signed transaction: raw transactions must match one of these by nonce, and eth_sendTransaction / signatures must come from one of these."
+    },
+    "state_dir": { "type": "string", "description": "Where usage, approvals and the audit log live. Default ~/.tas-guard (or TAS_GUARD_HOME)." },
+    "onchain": { "$ref": "#/$defs/policy" },
+    "approvals": {
+      "type": "object",
+      "description": "Same as the MCP guard: terminal approvals with `tas-guard approve <id>`, and optional Telegram.",
+      "properties": {
+        "cli": { "type": "boolean", "description": "false: only the phone can approve." },
+        "telegram": {
+          "type": "object",
+          "required": ["bot_token", "chat_id"],
+          "properties": {
+            "bot_token": { "type": "string" },
+            "chat_id": { "type": ["string", "integer"] },
+            "notify_blocked": { "type": "boolean" },
+            "notify_executed": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "address": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+    "action": { "enum": ["allow", "approve", "block"] },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "chains_allow": { "type": "array", "items": { "type": ["integer", "string"] }, "description": "Chain ids. Empty = any chain. Others are blocked." },
+        "native_usd": {
+          "oneOf": [ { "type": "number", "minimum": 0 }, { "type": "object", "additionalProperties": { "type": "number", "minimum": 0 } } ],
+          "description": "USD price of the native token, as a number or { \"<chainId>\": price }. No price feed is queried."
+        },
+        "tokens": {
+          "type": "object",
+          "description": "Known tokens by contract address. Tokens not listed can't be priced (see unknown_value).",
+          "propertyNames": { "pattern": "^0x[0-9a-fA-F]{40}$" },
+          "additionalProperties": {
+            "type": "object",
+            "required": ["decimals"],
+            "additionalProperties": false,
+            "properties": {
+              "symbol": { "type": "string" },
+              "decimals": { "type": "integer", "minimum": 0, "maximum": 77 },
+              "usd_price": { "oneOf": [ { "type": "number", "minimum": 0 }, { "const": "stable" } ] }
+            }
+          }
+        },
+        "max_tx_usd": { "type": "number", "minimum": 0, "default": 100, "description": "Hard: per transaction (and per allowance). Approval can't override it." },
+        "max_daily_usd": { "type": "number", "minimum": 0, "default": 500, "description": "Hard: sum of USD sent today (local time)." },
+        "max_tx_per_minute": { "type": "number", "minimum": 0, "default": 3 },
+        "max_tx_per_day": { "type": "number", "minimum": 0, "default": 20 },
+        "approve_over_usd": { "type": "number", "minimum": 0, "default": 50, "description": "Soft: above this a human approves." },
+        "unknown_value": { "$ref": "#/$defs/action", "default": "approve" },
+        "recipients_allow": { "type": "array", "items": { "$ref": "#/$defs/address" }, "description": "Known recipients of native and ERC-20 transfers. Your own wallets always count." },
+        "new_recipient": { "$ref": "#/$defs/action", "default": "approve" },
+        "contracts_allow": { "type": "array", "items": { "$ref": "#/$defs/address" }, "description": "Known contracts: the `to` of contract calls and the spenders of approvals." },
+        "unknown_contract": { "$ref": "#/$defs/action", "default": "approve" },
+        "token_approval": { "$ref": "#/$defs/action", "default": "approve", "description": "approve, increaseAllowance, ERC-2612 / DAI permits, Permit2." },
+        "unlimited_approval": { "$ref": "#/$defs/action", "default": "block", "description": "Allowances >= 2^255 (>= 2^159 for Permit2's uint160 amounts)." },
+        "approval_for_all": { "$ref": "#/$defs/action", "default": "block", "description": "setApprovalForAll(operator, true)." },
+        "typed_data": { "$ref": "#/$defs/action", "default": "approve", "description": "EIP-712 signatures that aren't recognized permits." },
+        "personal_sign": { "$ref": "#/$defs/action", "default": "approve" },
+        "eth_sign": { "$ref": "#/$defs/action", "default": "block" },
+        "unsupported_methods": { "$ref": "#/$defs/action", "default": "block", "description": "Other sending/signing methods the guard can't decode (eth_signTransaction, eth_sendUserOperation, wallet_sendCalls, personal_sendTransaction, ...)." },
+        "preflight": { "type": "boolean", "default": true, "description": "eth_call + eth_estimateGas before forwarding a send; a revert blocks it." },
+        "approval_ttl_minutes": { "type": "number", "minimum": 0, "default": 15, "description": "How long a held request waits for a human, and how long an approval stays usable." }
+      }
+    }
+  }
+}
