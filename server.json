@@ -3,7 +3,7 @@
   "name": "io.github.intoApex/tas-guard",
   "title": "TAS Guard",
   "description": "Order limits, phone approvals and a kill switch in front of any broker or exchange MCP server.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "repository": {
     "url": "https://github.com/intoApex/tas-guard",
     "source": "github"
@@ -14,7 +14,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "tas-guard",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "transport": {
         "type": "stdio"
       },
