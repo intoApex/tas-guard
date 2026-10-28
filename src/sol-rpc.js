@@ -133,7 +133,7 @@ export class SolRpcGuard extends RpcGuard {
       const al = accountList(op.tx, tables);
       Object.assign(op, { keys: al.keys, writable: al.keys.filter((_, i) => al.writable[i]), signers: al.signers, feePayer: al.feePayer });
       op.instructions = op.tx.instructions.map((ix) => decodeInstruction(ix, al.keys));
-      op.fee = computeFee(op.instructions, op.tx.signatures.length);
+      op.fee = computeFee(op.instructions, op.tx.signatures.length, op.tx);
       op.created = {};
       for (const i of op.instructions) if (i.programId === ATA && i.account) op.created[i.account] = i.owner;
       await this.inspect(op);

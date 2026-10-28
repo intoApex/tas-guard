@@ -70,7 +70,7 @@ export class MockSolana {
     const signers = new Set(al.signers);
     const writable = new Set(al.keys.filter((_, i) => al.writable[i]));
     const ixs = tx.instructions.map((i) => decodeInstruction(i, al.keys));
-    const fee = computeFee(ixs, tx.signatures.length).lamports;
+    const fee = computeFee(ixs, tx.signatures.length, tx).lamports;
     const payer = accts.get(al.feePayer);
     if (!payer || payer.lamports < fee) throw new TxError("InsufficientFundsForFee", logs);
     payer.lamports -= fee;

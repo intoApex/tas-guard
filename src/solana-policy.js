@@ -150,7 +150,7 @@ export function decideSolana({ op, policy, usage = {}, wallets = new Set(), kill
   const recent = (usage.recent || []).filter((t) => now - t < 60_000).length;
   if (recent >= policy.max_tx_per_minute) return out("block", `Rate limit: ${policy.max_tx_per_minute} transactions per minute.`);
   if ((usage.orders || 0) + 1 > policy.max_tx_per_day) return out("block", `Daily transaction limit reached (${policy.max_tx_per_day}).`);
-  if (sol(op.fee.lamports) > policy.max_fee_sol) return out("block", `Fee of ${fmtAmount(sol(op.fee.lamports))} SOL is over max_fee_sol (${policy.max_fee_sol} SOL). Priority fee: ${op.fee.microLamports} micro-lamports × ${op.fee.units} units.`);
+  if (sol(op.fee.lamports) > policy.max_fee_sol) return out("block", `Fee of ${fmtAmount(sol(op.fee.lamports))} SOL is over max_fee_sol (${policy.max_fee_sol} SOL). ${op.fee.microLamports === null ? `Priority fee: ${op.fee.priority} lamports (v1 transaction).` : `Priority fee: ${op.fee.microLamports} micro-lamports × ${op.fee.units} units.`}`);
 
   const flags = [];
   const flag = (a, r) => { if (a !== "allow" && !flags.some(([, x]) => x === r)) flags.push([a, r]); };

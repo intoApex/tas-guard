@@ -116,7 +116,9 @@ export const U64_MAX = (1n << 64n) - 1n;
  * @returns {{signatures:string[], message:Buffer, version:'legacy'|number, header:object, staticKeys:string[], blockhash:string, instructions:{programIdIndex:number, accounts:number[], data:Buffer}[], lookups:{table:string, writable:number[], readonly:number[]}[]}}
  */
 export function decodeTransaction(buf) {
-  const r = new Reader(Buffer.from(buf));
+  buf = Buffer.from(buf);
+  if (buf[0] === V1_BYTE) return decodeV1(buf);
+  const r = new Reader(buf);
   const nsig = r.shortvec();
   if (nsig === 0 || nsig > 64) throw new Error(`bad signature count ${nsig}`);
   const signatures = [];
@@ -158,6 +160,41 @@ export function decodeTransaction(buf) {
     throw new Error("bad message header");
   }
   return { signatures, message: r.b.subarray(msgStart), version, header, staticKeys, blockhash, instructions, lookups };
+}
+
+// Transaction v1 (SIMD-0385, live on mainnet since Sept 2026): version byte 129, header, config mask,
+// blockhash, u8 counts, inline addresses (no lookup tables), config values, 4-byte instruction headers,
+// instruction payloads, then the signatures at the end.
+export const V1_BYTE = 0x81;
+const V1_KNOWN_MASK = 0b11111;
+function decodeV1(buf) {
+  const r = new Reader(buf);
+  r.u8();
+  const header = { numRequiredSignatures: r.u8(), numReadonlySigned: r.u8(), numReadonlyUnsigned: r.u8() };
+  r.need(4); const mask = buf.readUInt32LE(r.o); r.o += 4;
+  if (mask & ~V1_KNOWN_MASK) throw new Error(`v1 transaction sets unknown config bits (0x${mask.toString(16)})`);
+  if ((mask & 1) !== ((mask >> 1) & 1)) throw new Error("v1 priority fee needs both config bits 0 and 1");
+  const blockhash = r.key();
+  const nix = r.u8(), nkeys = r.u8();
+  if (nix > 64 || nkeys > 64) throw new Error("v1 transaction has too many instructions or addresses");
+  const staticKeys = [];
+  for (let i = 0; i < nkeys; i++) staticKeys.push(r.key());
+  if (new Set(staticKeys).size !== staticKeys.length) throw new Error("v1 transaction has duplicate addresses");
+  const config = {};
+  if (mask & 1) { r.need(8); config.priorityFee = buf.readBigUInt64LE(r.o); r.o += 8; }
+  if (mask & 4) { r.need(4); config.computeUnitLimit = buf.readUInt32LE(r.o); r.o += 4; }
+  if (mask & 8) { r.need(4); config.loadedAccountsDataSizeLimit = buf.readUInt32LE(r.o); r.o += 4; }
+  if (mask & 16) { r.need(4); config.heapSize = buf.readUInt32LE(r.o); r.o += 4; }
+  const heads = [];
+  for (let i = 0; i < nix; i++) { r.need(4); heads.push({ programIdIndex: buf[r.o], na: buf[r.o + 1], dl: buf.readUInt16LE(r.o + 2) }); r.o += 4; }
+  const instructions = heads.map((h) => ({ programIdIndex: h.programIdIndex, accounts: [...r.bytes(h.na)], data: Buffer.from(r.bytes(h.dl)) }));
+  const ns = header.numRequiredSignatures;
+  const message = buf.subarray(0, r.o);
+  const signatures = [];
+  for (let i = 0; i < ns; i++) signatures.push(b58encode(r.bytes(64)));
+  if (r.o !== buf.length) throw new Error("trailing bytes after the transaction");
+  if (ns < 1 || ns > nkeys || header.numReadonlySigned >= ns || nkeys < ns + header.numReadonlyUnsigned) throw new Error("bad message header");
+  return { signatures, message, version: 1, header, staticKeys, blockhash, instructions, lookups: [], config, mask };
 }
 
 /** Address lookup table account data -> addresses (state layout: 56-byte header, then 32-byte keys). */
@@ -250,7 +287,11 @@ export function decodeInstruction(ix, keys) {
 }
 
 /** Transaction fee in lamports: 5000 per signature plus the priority fee (unit price × unit limit). */
-export function computeFee(ixs, numSignatures) {
+export function computeFee(ixs, numSignatures, tx) {
+  if (tx?.version === 1) { // v1: an absolute priority fee in the config; compute budget instructions are ignored
+    const priority = tx.config?.priorityFee ?? 0n;
+    return { lamports: 5000n * BigInt(numSignatures) + priority, priority, units: BigInt(tx.config?.computeUnitLimit ?? 0), microLamports: null };
+  }
   let limit, price = 0n, nonBudget = 0;
   for (const ix of ixs) {
     if (ix.type === "setComputeUnitLimit") limit = ix.units;
@@ -334,7 +375,7 @@ export const addr = (label) => b58encode(createHash("sha256").update(String(labe
  * @param {0|'legacy'} [o.version]
  * @param {{table:string, addresses:string[]}[]} [o.lookupTables] v0 only: accounts found in these tables are loaded through them
  */
-export function buildTransaction({ payer, signers, instructions, blockhash = addr("blockhash"), version = "legacy", lookupTables = [] }) {
+export function buildTransaction({ payer, signers, instructions, blockhash = addr("blockhash"), version = "legacy", lookupTables = [], config = {} }) {
   const metas = new Map();
   const add = (pubkey, isSigner, isWritable) => {
     const m = metas.get(pubkey) || { pubkey, isSigner: false, isWritable: false };
@@ -378,6 +419,21 @@ export function buildTransaction({ payer, signers, instructions, blockhash = add
     parts.push(shortvec(used.length));
     for (const lt of used) parts.push(b58decode(lt.table), shortvec(lt._w.length), Buffer.from(lt._w.map((m) => m.idx)), shortvec(lt._r.length), Buffer.from(lt._r.map((m) => m.idx)));
     for (const lt of lookupTables) { delete lt._w; delete lt._r; }
+  }
+  if (version === 1) {
+    const mask = (config.priorityFee !== undefined ? 3 : 0) | (config.computeUnitLimit !== undefined ? 4 : 0);
+    const vals = [];
+    if (config.priorityFee !== undefined) vals.push(le64(config.priorityFee));
+    if (config.computeUnitLimit !== undefined) vals.push(le32(config.computeUnitLimit));
+    const headsV1 = [], payloads = [];
+    for (const ix of instructions) {
+      const idx = ix.keys.map((k) => keys.indexOf(k.pubkey));
+      const h = Buffer.alloc(4); h[0] = keys.indexOf(ix.programId); h[1] = idx.length; h.writeUInt16LE(ix.data.length, 2);
+      headsV1.push(h); payloads.push(Buffer.from(idx), ix.data);
+    }
+    const msgV1 = Buffer.concat([Buffer.from([V1_BYTE]), header, le32(mask), b58decode(blockhash), Buffer.from([instructions.length, keys.length]), ...keys.map((k) => b58decode(k)), ...vals, ...headsV1, ...payloads]);
+    const sigsV1 = keys.slice(0, header[0]).map((k) => { const sg = signers.find((x) => x.publicKey === k); if (!sg) throw new Error(`no signer for ${k}`); return sg.sign(msgV1); });
+    return Buffer.concat([msgV1, ...sigsV1]);
   }
   const message = Buffer.concat(parts);
   const order = keys.slice(0, header[0]);

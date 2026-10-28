@@ -294,3 +294,27 @@ test("websocket upgrades pass through to the upstream (same port and port+1); br
     assert.equal(chain.wsHits, 2);
   } finally { await guard.close(); await chain.close(); }
 });
+
+test("transaction v1 (SIMD-0385): decodes, absolute priority fee, guarded end to end", async () => {
+  const raw = s.buildTransaction({ version: 1, payer: W.publicKey, signers: [W], config: { priorityFee: 20_000n, computeUnitLimit: 50_000 }, instructions: [s.ix.cuPrice(999_999_999n), s.ix.transfer(W.publicKey, FRIEND, 123n)] });
+  assert.equal(raw[0], 0x81);
+  const tx = s.decodeTransaction(raw);
+  assert.equal(tx.version, 1);
+  assert.deepEqual(tx.config, { priorityFee: 20_000n, computeUnitLimit: 50_000 });
+  const al = s.accountList(tx);
+  const ixs = tx.instructions.map((i) => s.decodeInstruction(i, al.keys));
+  assert.deepEqual([ixs[1].type, ixs[1].to, ixs[1].lamports], ["transfer", FRIEND, 123n]);
+  assert.equal(s.computeFee(ixs, 1, tx).lamports, 25_000n, "compute budget instructions are ignored in v1");
+  assert.throws(() => s.decodeTransaction(Buffer.concat([raw, Buffer.alloc(1)])), /trailing/);
+  const bad = Buffer.from(raw); bad.writeUInt32LE(0b100000, 4);
+  assert.throws(() => s.decodeTransaction(bad), /unknown config bits/);
+  const g = await setup();
+  try {
+    let r = await g.send([s.ix.transfer(W.publicKey, FRIEND, 1_000_000n)], { version: 1, config: { priorityFee: 10_000n } });
+    assert.ok(r.result, JSON.stringify(r));
+    r = await g.send([s.ix.memo("gm")], { version: 1, config: { priorityFee: 50_000_000n } });
+    assert.match(r.error.message, /max_fee_sol.*50000000 lamports \(v1 transaction\)/);
+    r = await g.send([s.ix.approve(A.wUsdc, ATTACKER, W.publicKey, s.U64_MAX)], { version: 1 });
+    assert.match(r.error.message, /Unlimited token delegation/);
+  } finally { await g.stop(); }
+});
