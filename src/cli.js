@@ -13,6 +13,9 @@ import { findChatId } from "./telegram.js";
 import { RpcGuard } from "./rpc.js";
 import { resolveOnchainPolicy } from "./onchain-policy.js";
 import { startMockEvm, DEMO_REVERT_CONTRACT } from "./demo-evm.js";
+import { SolRpcGuard } from "./sol-rpc.js";
+import { resolveSolanaPolicy } from "./solana-policy.js";
+import { runSolDemo } from "./sol-demo.js";
 
 const HELP = `TAS Guard ${VERSION}: trading-aware safety proxy for AI agents using broker and exchange MCP servers.
 
@@ -26,6 +29,11 @@ Try it with no broker account (built-in paper broker, simulated prices):
 Onchain (EVM) mode: a local JSON-RPC proxy your agent uses as its RPC URL:
   tas-guard rpc --config guard.json [--listen 127.0.0.1:8547]
   tas-guard rpc-demo [--port 8547]   the same, in front of a built-in mock chain (no keys, no money)
+
+Solana mode: the same idea for Solana agents (simulates every transaction before it is sent):
+  tas-guard sol-rpc --config guard.json [--listen 127.0.0.1:8890]
+  tas-guard sol-demo             watch it handle 7 agent transactions on a mock chain (no keys, no money)
+  tas-guard init solana          print a starter guard.json for Solana
 
 Human controls (run these yourself; never let the agent run them):
   tas-guard pending              list actions waiting for approval
@@ -129,6 +137,21 @@ async function cmdRpc(argv) {
   serveUntilSignal(guard);
 }
 
+// `tas-guard sol-rpc`: the Solana guard, an HTTP JSON-RPC (+ WebSocket) proxy in front of your upstream RPC.
+async function cmdSolRpc(argv) {
+  const cfgPath = flag(argv, "--config");
+  if (!cfgPath) throw new Error("Usage: tas-guard sol-rpc --config guard.json");
+  const path = resolve(cfgPath);
+  const cfg = expandEnv(readJson(path));
+  if (!cfg.upstream_rpc) throw new Error(`${path}: "upstream_rpc" is required (your Solana RPC URL; use \${VAR} for the API key)`);
+  const policy = resolveSolanaPolicy(cfg.solana || {});
+  const state = new State(cfg.state_dir ? resolve(dirname(path), cfg.state_dir) : defaultStateDir(), cfg.name || "solana");
+  const guard = new SolRpcGuard({ upstream: cfg.upstream_rpc, upstreamWs: cfg.upstream_ws, headers: cfg.upstream_headers || {}, wallets: cfg.wallets, policy, state, approvals: cfg.approvals || {} });
+  const [host, port] = parseListen(flag(argv, "--listen", cfg.listen || "127.0.0.1:8890"), flag(argv, "--port"));
+  await guard.listen(host, port);
+  serveUntilSignal(guard);
+}
+
 // `tas-guard rpc-demo`: the onchain guard in front of a built-in mock chain (Base, chain id 8453).
 export const DEMO_WALLET = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"; // well-known public test account (Hardhat #0)
 const DEMO_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
@@ -174,6 +197,8 @@ const commands = {
   demo: cmdDemo,
   rpc: cmdRpc,
   "rpc-demo": cmdRpcDemo,
+  "sol-rpc": cmdSolRpc,
+  "sol-demo": () => runSolDemo(),
   pending() {
     const items = new State().pending().items.filter((i) => i.status === "pending");
     if (!items.length) return console.log("No actions are waiting for approval.");
@@ -249,8 +274,16 @@ const commands = {
   },
   init(argv) {
     const slug = argv[0];
+    if (slug === "solana") {
+      return console.log(JSON.stringify({
+        name: "solana", upstream_rpc: "https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}", listen: "127.0.0.1:8890",
+        wallets: ["<your agent's wallet address>"],
+        solana: { clusters_allow: ["mainnet"], sol_usd: 150, max_tx_usd: 50, max_daily_usd: 200, approve_over_usd: 25, max_fee_sol: 0.005, programs_allow: ["jupiter", "pumpfun", "pumpswap"], program_caps: { pumpfun: { max_tx_usd: 20, max_daily_usd: 100 } }, recipients_allow: [] },
+        approvals: {},
+      }, null, 2));
+    }
     const p = slug ? loadProfile(slug) : null;
-    if (!p) throw new Error(`Usage: tas-guard init <profile>. Profiles: ${listBuiltinProfiles().join(", ")}`);
+    if (!p) throw new Error(`Usage: tas-guard init <profile>. Profiles: ${listBuiltinProfiles().join(", ")}, or "solana"`);
     const upstream = {
       "alpaca-mcp-server": { command: "uvx", args: ["alpaca-mcp-server"], env: { ALPACA_API_KEY: "${ALPACA_API_KEY}", ALPACA_SECRET_KEY: "${ALPACA_SECRET_KEY}", ALPACA_PAPER_TRADE: "true" } },
       "ccxt-mcp-server": { command: "npx", args: ["-y", "ccxt-mcp"] },

@@ -16,7 +16,7 @@ const HANDLED = new Set([...RAW_SEND, ...TYPED, "eth_sendTransaction", "personal
 const SIGNING = /^(eth_send|eth_sign|personal_|wallet_|mev_|flashbots_)/i; // case-insensitive: odd casing is blocked, not passed through
 const MAX_BODY = 5 * 1024 * 1024;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const isGuarded = (m) => m && typeof m.method === "string" && (HANDLED.has(m.method) || SIGNING.test(m.method));
+const isGuardedEvm = (m) => m && typeof m.method === "string" && (HANDLED.has(m.method) || SIGNING.test(m.method));
 const jsonBig = (v) => JSON.parse(JSON.stringify(v, (_, x) => (typeof x === "bigint" ? x.toString() : x)));
 
 export class RpcGuard {
@@ -39,7 +39,7 @@ export class RpcGuard {
     this.upstream = u.toString();
     this.upstreamHost = u.host;
     this.secrets = [upstream, this.upstream, u.pathname.length > 1 ? u.pathname : null, u.search || null].filter(Boolean);
-    this.wallets = new Set((wallets || []).map((w) => { if (!isAddress(w)) throw new Error(`wallets: '${w}' is not a 0x address`); return w.toLowerCase(); }));
+    this.wallets = this.parseWallets(wallets);
     if (!this.wallets.size) throw new Error('"wallets" is required: the agent\'s wallet address(es), so the guard can check the sender and run the pre-flight check.');
     this.policy = policy;
     this.state = state;
@@ -55,6 +55,27 @@ export class RpcGuard {
     }
   }
 
+  // ---------- hooks (the Solana guard overrides these) ----------
+  parseWallets(wallets) { return new Set((wallets || []).map((w) => { if (!isAddress(w)) throw new Error(`wallets: '${w}' is not a 0x address`); return w.toLowerCase(); })); }
+  isGuarded(m) { return isGuardedEvm(m); }
+  prepare() { return this.chainId().catch(() => {}); }
+  modeName() { return chainName(this.cid ?? null); }
+  summarize(op) { return describe(op, this.policy); }
+  needsCheck(op) { return op.send && this.policy.preflight; }
+  check(op) { return this.preflight(op); }
+  fingerprint(m) { return sha256(this.state.guard + "|" + m.method + "|" + canonical(m.params ?? null)); }
+  onExecuted(op, fresh) {
+    this.state.recordExecuted(fresh.spend);
+    if (op.raw && op.from) this.nextNonce.set(op.from, op.nonce + 1n);
+  }
+  auditArgs(op) { return auditArgs(op); }
+  info() { return { tas_guard: VERSION, mode: "onchain", upstream: this.upstreamHost, chain_id: this.cid ?? null }; }
+  async announce(host) {
+    const cid = await this.chainId().catch(() => null);
+    this.log(`onchain guard listening on ${this.url} -> upstream ${this.upstreamHost} (${cid === null ? "chain id not read yet" : chainName(cid)}), wallets ${[...this.wallets].join(", ")}`);
+    if (cid !== null && this.policy.chains_allow.length && !this.policy.chains_allow.includes(cid)) this.log(`warning: upstream chain ${cid} is not on chains_allow: every send and signature will be blocked`);
+  }
+
   /** Remove the upstream URL (and its API key) from anything we might log or return. */
   scrub(s) { let t = String(s); for (const x of this.secrets) t = t.split(x).join("<upstream>"); return t; }
 
@@ -66,9 +87,7 @@ export class RpcGuard {
     await new Promise((resolve, reject) => { this.server.once("error", reject); this.server.listen(port, host, resolve); });
     const a = this.server.address();
     this.url = `http://${a.family === "IPv6" ? `[${a.address}]` : a.address}:${a.port}`;
-    const cid = await this.chainId().catch(() => null);
-    this.log(`onchain guard listening on ${this.url} -> upstream ${this.upstreamHost} (${cid === null ? "chain id not read yet" : chainName(cid)}), wallets ${[...this.wallets].join(", ")}`);
-    if (cid !== null && this.policy.chains_allow.length && !this.policy.chains_allow.includes(cid)) this.log(`warning: upstream chain ${cid} is not on chains_allow: every send and signature will be blocked`);
+    await this.announce(host);
     if (!/^(127\.|::1$|localhost$)/.test(host)) this.log(`warning: listening on ${host}, not loopback. Anyone who can reach this port can use your RPC through the guard.`);
     return this.url;
   }
@@ -103,7 +122,7 @@ export class RpcGuard {
   async onHttp(req, res) {
     // Browsers send Origin on cross-site requests: refuse them, so a web page can't use your agent's RPC.
     if (req.headers.origin) return this.send(res, 403, { jsonrpc: "2.0", id: null, error: { code: -32600, message: "TAS Guard refuses browser (cross-origin) requests" } });
-    if (req.method === "GET") return this.send(res, 200, { tas_guard: VERSION, mode: "onchain", upstream: this.upstreamHost, chain_id: this.cid ?? null });
+    if (req.method === "GET") return this.send(res, 200, this.info());
     if (req.method !== "POST") return this.send(res, 405, { jsonrpc: "2.0", id: null, error: { code: -32600, message: "POST JSON-RPC only" } });
     let body = "", size = 0;
     for await (const c of req) { size += c.length; if (size > MAX_BODY) return this.send(res, 413, { jsonrpc: "2.0", id: null, error: { code: -32600, message: "request too large" } }); body += c; }
@@ -112,7 +131,7 @@ export class RpcGuard {
     const ctx = { gone: false };
     res.on("close", () => { if (!res.writableEnded) ctx.gone = true; });
 
-    const guarded = Array.isArray(msg) ? msg.some(isGuarded) : isGuarded(msg);
+    const guarded = Array.isArray(msg) ? msg.some((m) => this.isGuarded(m)) : this.isGuarded(msg);
     // Forward what we parsed (not the raw bytes), so the upstream can't read a different request
     // than the guard did (e.g. JSON with duplicate "method" keys).
     if (!guarded) return this.passThrough(res, JSON.stringify(msg));
@@ -120,7 +139,7 @@ export class RpcGuard {
       const out = await this.handle(msg, ctx);
       return out ? this.send(res, 200, out) : ctx.gone ? undefined : (res.writeHead(204), res.end());
     }
-    const outs = await Promise.all(msg.map((m) => (isGuarded(m) ? this.handle(m, ctx) : this.forward(m))));
+    const outs = await Promise.all(msg.map((m) => (this.isGuarded(m) ? this.handle(m, ctx) : this.forward(m))));
     this.send(res, 200, outs.filter(Boolean));
   }
 
@@ -236,12 +255,12 @@ export class RpcGuard {
     const reply = (x) => (id === undefined ? null : { jsonrpc: "2.0", id, ...x });
     if (m.method === "tas_guardStatus") return reply({ result: this.status() });
 
-    await this.chainId().catch(() => {});
+    await this.prepare();
     const op = await this.decode(m);
     op.upstreamChainId = this.cid ?? null;
     let d = this.decideNow(op);
-    const summary = describe(op, this.policy);
-    const base = { tool: m.method, class: op.kind, mode: chainName(this.cid ?? null), args: auditArgs(op), decision: d.action, reason: d.reason, order_value: finite(d.usd), summary };
+    const summary = this.summarize(op);
+    const base = { tool: m.method, class: op.kind, mode: this.modeName(), args: this.auditArgs(op), decision: d.action, reason: d.reason, order_value: finite(d.usd), summary };
     const blocked = (reason, extra = {}) => {
       this.state.audit({ ...base, decision: "block", reason, outcome: "blocked", ...extra });
       if (this.tg?.notifyBlocked) this.tg.notify(`🚫 Blocked (${this.state.guard}, ${base.mode})\n${summary}\nWhy: ${reason}`);
@@ -250,8 +269,8 @@ export class RpcGuard {
     };
     if (d.action === "block") return blocked(d.reason);
 
-    if (op.send && this.policy.preflight) {
-      const why = await this.preflight(op);
+    if (this.needsCheck(op)) {
+      const why = await this.check(op);
       if (why) return blocked(why);
     }
 
@@ -263,18 +282,18 @@ export class RpcGuard {
     }
 
     const go = async () => {
+      if (approvedBy && this.needsCheck(op)) { // time has passed while waiting: check again
+        const why = await this.check(op, { approvedBy, m });
+        if (why && typeof why === "object") return reply(why.response);
+        if (why) return blocked(why, { approved_by: approvedBy });
+      }
       const fresh = this.decideNow(op);
       if (fresh.action === "block") return blocked(fresh.reason, { approved_by: approvedBy });
       if (fresh.action === "approve" && !approvedBy) return blocked(`needs approval now (${fresh.reason}). Send it again to start an approval.`);
-      if (approvedBy && op.send && this.policy.preflight) { // time has passed while waiting: check again
-        const why = await this.preflight(op);
-        if (why) return blocked(why, { approved_by: approvedBy });
-      }
       const r = await this.forward(m);
       const ok = r === null || (r && r.error === undefined);
       if (ok && op.send) {
-        this.state.recordExecuted(fresh.spend);
-        if (op.raw && op.from) this.nextNonce.set(op.from, op.nonce + 1n);
+        this.onExecuted(op, fresh);
         if (this.tg?.notifyExecuted) this.tg.notify(`✅ Sent (${this.state.guard})\n${summary}${approvedBy ? `\nApproved via ${approvedBy}` : ""}`);
       }
       this.state.audit({ ...base, outcome: ok ? (op.send ? "executed" : "signed") : "upstream_rejected", approved_by: approvedBy, counted: ok && op.send, result: ok && typeof r?.result === "string" ? r.result.slice(0, 66) : undefined, error: ok ? undefined : this.scrub(r?.error?.message || "") });
@@ -292,7 +311,7 @@ export class RpcGuard {
   /** Hold the request until a human decides (terminal or Telegram), the TTL passes, or the client hangs up. */
   async getApproval(m, op, summary, d, base, ctx) {
     const ttl = this.policy.approval_ttl_minutes;
-    const fp = sha256(this.state.guard + "|" + m.method + "|" + canonical(m.params ?? null));
+    const fp = this.fingerprint(m, op);
     const prior = this.state.consumeApproval(fp, ttl);
     if (prior) return { by: prior.decided_by || "cli" };
     const item = this.state.requestApproval({ fingerprint: fp, tool: m.method, summary: `${summary}${d.usd !== undefined && Number.isFinite(d.usd) ? ` [${usd(d.usd)}]` : ""}`, reason: d.reason, cli_allowed: !(this.tg && this.approvalsCfg.cli === false) });

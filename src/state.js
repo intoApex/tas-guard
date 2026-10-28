@@ -60,14 +60,17 @@ export class State {
   // --- daily usage (per guard) ---
   usage(now = Date.now()) {
     const u = readJson(this.usagePath, null);
-    if (!u || u.day !== today(now)) return { day: today(now), spent: 0, orders: 0, recent: [] };
+    if (!u || u.day !== today(now)) return { day: today(now), spent: 0, orders: 0, recent: [], buckets: {} };
     u.recent = (u.recent || []).filter((t) => now - t < 60_000);
+    u.buckets = u.buckets || {};
     return u;
   }
-  recordExecuted(value, now = Date.now()) {
+  /** @param {Record<string,number>} [buckets] extra per-key daily totals (e.g. per-program caps) */
+  recordExecuted(value, now = Date.now(), buckets = {}) {
     const u = this.usage(now);
     u.orders += 1;
     if (Number.isFinite(value)) u.spent = Math.round((u.spent + value) * 100) / 100;
+    for (const [k, v] of Object.entries(buckets || {})) if (Number.isFinite(v)) u.buckets[k] = Math.round(((u.buckets[k] || 0) + v) * 100) / 100;
     u.recent.push(now);
     writeJson(this.usagePath, u);
     return u;
