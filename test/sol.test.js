@@ -10,6 +10,7 @@ import { MockSolana, DEX, SHADY } from "../src/demo-sol.js";
 import { SolRpcGuard } from "../src/sol-rpc.js";
 import { resolveSolanaPolicy, decideSolana } from "../src/solana-policy.js";
 import { State } from "../src/state.js";
+import { startMockTelegram } from "./mock-telegram.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const USDC = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
@@ -25,7 +26,7 @@ const dexBuy = (lamports, tokens) => {
 };
 const shady = () => ({ programId: SHADY, keys: [{ pubkey: A.wUsdc, isWritable: true }, { pubkey: ATTACKER }], data: Buffer.from([1]) });
 
-async function setup({ policy = {}, cluster = "devnet" } = {}) {
+async function setup({ policy = {}, cluster = "devnet", approvals = {} } = {}) {
   const chain = new MockSolana({ cluster });
   await chain.listen();
   chain.fund(W.publicKey, 5_000_000_000n);
@@ -38,7 +39,7 @@ async function setup({ policy = {}, cluster = "devnet" } = {}) {
   const home = mkdtempSync(join(tmpdir(), "tg-sol-"));
   const state = new State(home, "sol");
   const logs = [];
-  const guard = new SolRpcGuard({ upstream: chain.url + "/?api-key=SECRET-123", wallets: [W.publicKey], policy: resolveSolanaPolicy({ ...BASE, ...policy }), state, log: (x) => logs.push(x) });
+  const guard = new SolRpcGuard({ upstream: chain.url + "/?api-key=SECRET-123", wallets: [W.publicKey], policy: resolveSolanaPolicy({ ...BASE, ...policy }), state, approvals, log: (x) => logs.push(x) });
   const url = await guard.listen("127.0.0.1", 0);
   const post = async (body, headers = {}) => { const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) }); return { status: r.status, body: await r.json().catch(() => null) }; };
   const call = async (method, params) => (await post({ jsonrpc: "2.0", id: 1, method, params })).body;
@@ -172,7 +173,7 @@ test("drainer patterns are blocked: unlimited delegation, hidden delegation insi
     let r = await g.send([s.ix.approve(A.wUsdc, ATTACKER, W.publicKey, s.U64_MAX)]);
     assert.match(r.error.message, /Unlimited token delegation/);
     r = await g.send([shady()]);
-    assert.match(r.error.message, /Unlimited token delegation/, "caught from the simulated account state, not the instruction");
+    assert.match(r.error.message, /Simulation shows .*unlimited token delegation/, "caught from the simulated account state, not the instruction");
     r = await g.send([s.ix.assign(W.publicKey, SHADY)]);
     assert.match(r.error.message, /Hands your wallet .* over to program/);
     r = await g.send([s.ix.setAuthority(A.wUsdc, W.publicKey, "accountOwner", ATTACKER)]);
@@ -317,4 +318,26 @@ test("transaction v1 (SIMD-0385): decodes, absolute priority fee, guarded end to
     r = await g.send([s.ix.approve(A.wUsdc, ATTACKER, W.publicKey, s.U64_MAX)], { version: 1 });
     assert.match(r.error.message, /Unlimited token delegation/);
   } finally { await g.stop(); }
+});
+
+test("phone approvals (Telegram) work for Solana: the phone sees the decoded summary; /kill and /status work", async () => {
+  const tg = await startMockTelegram();
+  const OWNER = 777;
+  const g = await setup({ approvals: { telegram: { bot_token: tg.token, chat_id: String(OWNER), api_base: tg.base } } });
+  try {
+    const p = g.send([s.ix.transfer(W.publicKey, s.addr("new-friend"), 20_000_000n)]);
+    const msg = await tg.waitFor((st) => st.sent.find((m) => m.reply_markup));
+    assert.match(msg.text, /send 0\.02 SOL to/);
+    assert.match(msg.text, /solana-devnet/);
+    const id = g.state.pending().items.find((i) => i.status === "pending").id;
+    tg.tap(id, true, OWNER);
+    const r = await p;
+    assert.ok(r.result, JSON.stringify(r));
+    tg.say("/status", OWNER);
+    await tg.waitFor((st) => st.sent.some((m) => /Today: 3 used, 297 left/.test(m.text)));
+    tg.say("/kill", OWNER);
+    await tg.waitFor(() => g.state.killed());
+    assert.match((await g.send([s.ix.transfer(W.publicKey, FRIEND, 1n)])).error.message, /Kill switch/);
+    g.state.resume();
+  } finally { await g.stop(); await tg.close(); }
 });

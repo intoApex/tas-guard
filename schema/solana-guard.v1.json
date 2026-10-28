@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tradingagentstack.com/schema/solana-guard.v1.json",
+  "title": "TAS Guard Solana config v1",
+  "description": "Config for `tas-guard sol-rpc`: a local Solana JSON-RPC (and WebSocket) proxy an agent uses as its RPC URL. Reads pass through; sendTransaction is decoded, simulated and checked against `solana` first. Strings may use ${VAR} to read environment variables.",
+  "type": "object",
+  "required": [
+    "upstream_rpc",
+    "wallets"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Guard name for daily usage and the audit log. Default: solana."
+    },
+    "upstream_rpc": {
+      "type": "string",
+      "description": "Your Solana RPC URL. Never logged; only its host is shown."
+    },
+    "upstream_ws": {
+      "type": "string",
+      "description": "Your provider's WebSocket URL, if it isn't upstream_rpc with wss://."
+    },
+    "upstream_headers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "listen": {
+      "type": "string",
+      "description": "host:port. Default 127.0.0.1:8890 (WebSocket also on port + 1). Keep it on loopback."
+    },
+    "state_dir": {
+      "type": "string"
+    },
+    "wallets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/address"
+      },
+      "description": "The agent's wallet address(es). A transaction must be signed by one of them."
+    },
+    "approvals": {
+      "type": "object",
+      "description": "Same as the other modes: { cli?: boolean, telegram?: { bot_token, chat_id, ... } }."
+    },
+    "solana": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "clusters_allow": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "mainnet",
+              "devnet",
+              "testnet",
+              "localnet"
+            ]
+          },
+          "default": []
+        },
+        "sol_usd": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "default": null
+        },
+        "tokens": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "usd_price"
+            ],
+            "properties": {
+              "symbol": {
+                "type": "string"
+              },
+              "usd_price": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  {
+                    "const": "stable"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "max_tx_usd": {
+          "type": "number",
+          "minimum": 0,
+          "default": 100
+        },
+        "max_daily_usd": {
+          "type": "number",
+          "minimum": 0,
+          "default": 500
+        },
+        "max_tx_per_minute": {
+          "type": "number",
+          "minimum": 0,
+          "default": 3
+        },
+        "max_tx_per_day": {
+          "type": "number",
+          "minimum": 0,
+          "default": 20
+        },
+        "max_fee_sol": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0.01
+        },
+        "program_caps": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "max_tx_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "max_daily_usd": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "description": "Keys: program ids or presets."
+        },
+        "addresses_block": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/address"
+          },
+          "default": []
+        },
+        "approve_over_usd": {
+          "type": "number",
+          "minimum": 0,
+          "default": 50
+        },
+        "unknown_value": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "approve"
+        },
+        "programs_allow": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/address"
+              },
+              {
+                "enum": [
+                  "jupiter",
+                  "pumpfun",
+                  "pumpswap",
+                  "raydium",
+                  "orca",
+                  "meteora"
+                ]
+              }
+            ]
+          },
+          "default": []
+        },
+        "unknown_program": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "approve"
+        },
+        "recipients_allow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/address"
+          },
+          "default": []
+        },
+        "jito_tips": {
+          "type": "boolean",
+          "default": true
+        },
+        "new_recipient": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "approve"
+        },
+        "token_delegation": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "approve"
+        },
+        "unlimited_delegation": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "block"
+        },
+        "owner_change": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "block"
+        },
+        "close_authority_change": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "approve"
+        },
+        "unsupported_methods": {
+          "enum": [
+            "allow",
+            "approve",
+            "block"
+          ],
+          "default": "block"
+        },
+        "simulate": {
+          "type": "boolean",
+          "default": true
+        },
+        "approval_ttl_minutes": {
+          "type": "number",
+          "minimum": 0,
+          "default": 15
+        }
+      }
+    }
+  },
+  "$defs": {
+    "address": {
+      "type": "string",
+      "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+    }
+  }
+}

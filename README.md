@@ -14,7 +14,9 @@ AI client  ──►  TAS Guard  ──►  Alpaca / CCXT / any trading MCP serv
 
 Zero dependencies. About 2,000 lines of plain JavaScript you can read in one sitting.
 
-**New in 0.3: [onchain (EVM) mode](#onchain-evm-mode).** The same limits, approvals, kill switch and audit log for agents that hold their own wallet: `tas-guard rpc` is a local JSON-RPC endpoint your agent uses as its RPC URL.
+**New in 0.4: [Solana mode](#solana-mode).** `tas-guard sol-rpc` simulates every transaction your Solana agent sends and blocks drainer patterns (hidden delegations, account takeovers), runaway priority fees and anything over your caps, including per-program caps such as "pump.fun: $20 per trade, $100 a day". Try it: `npx tas-guard sol-demo`.
+
+**Also: [onchain (EVM) mode](#onchain-evm-mode)** for agents that hold their own EVM wallet: `tas-guard rpc` is a local JSON-RPC endpoint your agent uses as its RPC URL.
 
 ## Try it in 10 seconds (no broker account)
 
@@ -322,8 +324,132 @@ They work exactly as in MCP mode and share the same state. A held request stays 
 - **Generic contract calls are priced by their native value only.** Tokens moved inside a call (a swap through a router you already approved, say) don't count toward USD limits. That's why unknown contracts and every approval ask you by default; keep `contracts_allow` short.
 - **Prices are static.** `native_usd` and `usd_price` come from your config; tokens not listed are unpriced (`unknown_value`).
 - **It only protects agents that use this RPC URL.** Wallets that broadcast through their own API (Coinbase CDP server wallets, ERC-4337 bundlers, a second RPC) bypass it. User operations, EIP-7702 and blob transactions are blocked, not decoded.
-- **EVM only.** Solana isn't supported yet.
+- **EVM only here.** For Solana, see [Solana mode](#solana-mode).
 - **Same caveat as MCP mode:** an agent with shell access could run `tas-guard approve` itself unless you use phone approvals with `"cli": false`.
+
+## Solana mode
+
+For Solana agents that sign their own transactions (Solana Agent Kit, `@solana/web3.js` or `@solana/kit` bots, Jupiter and pump.fun scripts), `tas-guard sol-rpc` runs a local Solana JSON-RPC endpoint. Point the agent's RPC URL at it instead of your provider:
+
+```
+AI agent ──► http://127.0.0.1:8890 (TAS Guard) ──► your Solana RPC (Helius, Triton, QuickNode...)
+                   │
+                   ├─ reads and WebSocket subscriptions: passed through untouched
+                   ├─ sendTransaction: decoded, simulated, checked, then forwarded, held for you, or refused
+                   └─ logs: every decision, in the same hash-chained audit log
+```
+
+Watch it work with no keys, no network and no money:
+
+```
+npx tas-guard sol-demo
+```
+
+An agent sends seven signed transactions through the guard to a built-in mock chain: a pump.fun buy under its cap goes through; a bigger one is blocked by the per-program cap; a send to a new address is held and approved; a fake "airdrop claim" that quietly makes a drainer a delegate of your USDC is blocked; so are an unlimited approval, a send over the per-transaction limit and a 0.14 SOL priority fee.
+
+**What it can't protect:** custodial Telegram trading bots (Trojan, BullX, Axiom and the like) keep your keys on their servers and never send through your RPC, so no local guard can see their trades. For those, check the bot's links before you use it: [tradingagentstack.com/check](https://tradingagentstack.com/check/).
+
+### What it checks
+
+Only `sendTransaction` is checked; other `send*` methods (`sendBundle`...) are blocked because they can't be checked. Every transaction format is decoded: legacy, v0 with address lookup tables (the tables are read from the chain), and **v1** (SIMD-0385, live on mainnet since September 2026). The decoder was cross-checked against `@solana/web3.js` in both directions and against 314 real devnet transactions of all three versions, matching the node's own view of every one.
+
+Then the guard **simulates the transaction** (`simulateTransaction` with the writable accounts' before and after state). That's how it measures what actually leaves your wallets, including SOL and tokens moved inside other programs, not just what the top-level instructions say.
+
+For each transaction, in this order:
+
+1. Kill switch on → block (reads still work).
+2. Not signed by one of your `wallets` → block.
+3. Cluster not on `clusters_allow` (read from the RPC's genesis hash) → block.
+4. Any account on `addresses_block` anywhere in the transaction → block.
+5. More than `max_tx_per_minute` or `max_tx_per_day` → block.
+6. Network + priority fee over `max_fee_sol` → block (catches runaway priority fees; v1's absolute priority fee is read too).
+7. Your wallet assigned to another program (`System Assign`), or one of your token accounts handed to a new owner (`SetAuthority`), whether by an instruction or inside another program as the simulation shows → block (`owner_change`).
+8. Unlimited token delegation (`Approve` for the u64 maximum), by instruction or as the simulation shows → block. Any other delegation asks you (`token_delegation`), and one worth more than `max_tx_usd` is blocked.
+9. The simulation fails → block, with the program's error.
+10. USD value leaving your wallets over `max_tx_usd`, today's total over `max_daily_usd`, or over a `program_caps` limit for a program the transaction calls → block. These are hard limits; approval can't override them.
+11. Ask a human if: value over `approve_over_usd`; something that leaves can't be priced (`unknown_value`); a direct SOL or token transfer goes to an address not on `recipients_allow` (`new_recipient`; Jito tip accounts count as known); or it calls a program not on `programs_allow` (`unknown_program`).
+12. Otherwise → forward.
+
+The value counts SOL (including wrapped SOL and the rent in your token accounts, so creating and closing accounts nets out), the network fee, and every token whose balance falls in an account you own. Tokens are priced from your config: `sol_usd`, plus a `tokens` list (`"usd_price": "stable"` or a number). USDC and USDT are built in at $1. A memecoin you're selling has no price unless you list it, so with the default `unknown_value: "approve"` sells of unlisted tokens ask you. Buys are valued by the SOL that leaves.
+
+Program presets for `programs_allow` and `program_caps`: `jupiter`, `pumpfun`, `pumpswap`, `raydium` (AMM v4, CPMM, CLMM), `orca` (Whirlpool), `meteora` (DLMM, dynamic AMM). Program IDs are from each project's own docs, checked October 2026. Core programs (System, Token, Token-2022, Associated Token, Compute Budget, Memo) are always allowed, because the guard decodes them itself.
+
+### Config (mainnet, Jupiter and pump.fun)
+
+`npx tas-guard init solana` prints this starter config:
+
+```json
+{
+  "name": "solana",
+  "upstream_rpc": "https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}",
+  "listen": "127.0.0.1:8890",
+  "wallets": ["YourAgentWalletAddress"],
+  "solana": {
+    "clusters_allow": ["mainnet"],
+    "sol_usd": 150,
+    "max_tx_usd": 50,
+    "max_daily_usd": 200,
+    "approve_over_usd": 25,
+    "max_fee_sol": 0.005,
+    "programs_allow": ["jupiter", "pumpfun", "pumpswap"],
+    "program_caps": { "pumpfun": { "max_tx_usd": 20, "max_daily_usd": 100 } },
+    "recipients_allow": []
+  },
+  "approvals": {
+    "telegram": { "bot_token": "${TAS_TELEGRAM_BOT_TOKEN}", "chat_id": "123456789" }
+  }
+}
+```
+
+```
+HELIUS_API_KEY=... npx tas-guard sol-rpc --config ~/tas-guard/solana.json
+```
+
+The full schema is [`schema/solana-guard.v1.json`](schema/solana-guard.v1.json); unknown settings are rejected.
+
+| Setting | Default | |
+|---|---|---|
+| `clusters_allow` | `[]` (any) | `mainnet`, `devnet`, `testnet`, `localnet` |
+| `sol_usd` | none | USD price of SOL; without it SOL is unpriced |
+| `tokens` | `{}` | `{ "<mint>": { "symbol": "BONK", "usd_price": 0.00002 } }` |
+| `max_tx_usd`, `max_daily_usd` | 100, 500 | Hard limits |
+| `max_tx_per_minute`, `max_tx_per_day` | 3, 20 | Hard limits |
+| `max_fee_sol` | 0.01 | Hard limit on network + priority fee |
+| `program_caps` | `{}` | Per program (or preset): `max_tx_usd`, `max_daily_usd` |
+| `addresses_block` | `[]` | Hard block if any of these appear |
+| `approve_over_usd` | 50 | Ask above this |
+| `unknown_value` | `approve` | Something leaving can't be priced |
+| `programs_allow` / `unknown_program` | `[]` / `approve` | Program ids or presets |
+| `recipients_allow` / `new_recipient` | `[]` / `approve` | Your wallets always count as known |
+| `jito_tips` | `true` | Jito tip accounts count as known recipients |
+| `token_delegation`, `unlimited_delegation` | `approve`, `block` | |
+| `owner_change`, `close_authority_change` | `block`, `approve` | |
+| `unsupported_methods` | `block` | |
+| `simulate` | `true` | Off: only decoded SOL and token transfers are valued, and other programs make the value unknown |
+| `approval_ttl_minutes` | 15 | |
+
+### Point your agent at it
+
+- **`@solana/web3.js`:** `new Connection("http://127.0.0.1:8890", "confirmed")`. web3.js looks for the WebSocket on port + 1 when the URL has a port, so the guard also listens on 8891; subscriptions (used by `confirmTransaction`) pass through to your provider's WebSocket.
+- **`@solana/kit`:** `createSolanaRpc("http://127.0.0.1:8890")` and `createSolanaRpcSubscriptions("ws://127.0.0.1:8890")`.
+- **Solana Agent Kit:** pass the guard's URL as the RPC URL.
+- If your provider's WebSocket URL isn't the RPC URL with `wss://`, set `upstream_ws`.
+
+The agent can call `tas_guardStatus` on the RPC to see its limits, today's usage and its per-program totals.
+
+### Approvals and expiring blockhashes
+
+Solana transactions expire about a minute after they're built, which is often shorter than a human approval. If the blockhash expires while you're deciding, the agent gets: "approved, but the transaction's blockhash expired; rebuild the same transaction with a fresh blockhash and send it again". The re-signed copy goes through without asking again, because approvals match the transaction minus its signatures and blockhash. A rebuilt swap with a new quote is a different transaction and asks again.
+
+Kill switch, phone approvals and the audit log work exactly as in the other modes and share the same state.
+
+### Limitations (Solana)
+
+- **The simulation is a snapshot.** It shows what the transaction would do against the chain's state a moment before it's sent. Swaps can still fill worse within your slippage setting, and state can change before inclusion.
+- **Prices are static.** `sol_usd` and token prices come from your config.
+- **It only protects agents that send through this RPC URL.** A second RPC, a Jito bundle endpoint, a wallet-as-a-service API or a custodial bot bypass it.
+- **Durable-nonce transactions** are checked when they're sent through the guard, but a copy sent elsewhere later isn't.
+- **Same caveat as the other modes:** an agent with shell access could run `tas-guard approve` itself unless you use phone approvals with `"cli": false`.
 
 ## Windows and Claude Desktop notes
 
@@ -346,8 +472,9 @@ Tested on Windows with the Microsoft Store version of Claude Desktop, October 20
 ## Development
 
 ```
-npm test        # 61 tests: unit, end to end through a mock broker over real MCP stdio, the phone flow against a mock Telegram API,
-                # and onchain mode (transaction decoding, policy, and the RPC proxy against a mock EVM node)
+npm test        # 78 tests: unit, end to end through a mock broker over real MCP stdio, the phone flow against a mock Telegram API,
+                # onchain mode (transaction decoding, policy, and the RPC proxy against a mock EVM node), and Solana mode
+                # (decoder, policy, and the RPC + WebSocket proxy against a mock Solana chain that executes transactions)
 ```
 
 MIT licensed. Built by [TradingAgentStack](https://tradingagentstack.com), the independent directory of what AI trading tools can do with your money.

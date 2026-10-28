@@ -158,11 +158,12 @@ export function decideSolana({ op, policy, usage = {}, wallets = new Set(), kill
 
   // Instructions the transaction itself contains
   const delegated = new Set();
-  const checkDelegation = (account, mint, delegate, amount, decimals) => {
+  const checkDelegation = (account, mint, delegate, amount, decimals, viaSim = false) => {
     delegated.add(account);
     if (amount === 0n) return null;
+    const pre = viaSim ? "Simulation shows this transaction would make " : "";
     if (amount === U64_MAX) {
-      const a = act(policy.unlimited_delegation, `Unlimited token delegation to ${short(delegate)}.`, out);
+      const a = act(policy.unlimited_delegation, viaSim ? `${pre}${short(delegate)} able to spend all of your ${mint ? symbolOf(policy, mint) : "tokens"} (unlimited token delegation), even though no instruction says so directly.` : `Unlimited token delegation to ${short(delegate)}.`, out);
       if (a.action === "block") return a;
       flag(a.action, a.reason);
     }
@@ -214,7 +215,7 @@ export function decideSolana({ op, policy, usage = {}, wallets = new Set(), kill
     }
     for (const d of op.sim.delegations) {
       if (delegated.has(d.account)) continue;
-      const r = checkDelegation(d.account, d.mint, d.delegate, d.amount, d.decimals);
+      const r = checkDelegation(d.account, d.mint, d.delegate, d.amount, d.decimals, true);
       if (r) return r;
     }
     for (const c of op.sim.closeAuthChanges) flag(policy.close_authority_change, c);
