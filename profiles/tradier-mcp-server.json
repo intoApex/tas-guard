@@ -1,0 +1,123 @@
+{
+  "$schema": "https://tradingagentstack.com/schema/connector-profile.v1.json",
+  "profile_version": 1,
+  "slug": "tradier-mcp-server",
+  "name": "Tradier MCP Server",
+  "vendor": "Tradier",
+  "listing": "https://tradingagentstack.com/tool/tradier-mcp-server/",
+  "source": "https://docs.tradier.com/docs/tradier-mcp",
+  "verified_against": "Tradier docs page 'Tradier MCP' (docs.tradier.com/docs/tradier-mcp), tool list of 22 tools (search_tradier_docs plus 21 brokerage tools) with parameter names, read 2026-10-28. The server is hosted at https://mcp.tradier.com/mcp and closed source; argument names are taken from that page. Per-order field keys for OCO/OTO/OTOCO are not documented, so those orders are not value-checked.",
+  "last_checked": "2026-10-28",
+  "quote_currency": "USD",
+  "mode": {
+    "env": "PAPER_TRADING",
+    "paper_values": [
+      "true"
+    ],
+    "default": "live",
+    "note": "Tradier selects paper or live with the PAPER_TRADING setting (\"true\" with the paper token, \"false\" with the live token), sent as a header or the paper_trading URL parameter. TAS Guard can only see it when the upstream command's env sets PAPER_TRADING; otherwise the guard assumes live money."
+  },
+  "tools": {
+    "search_tradier_docs": {
+      "class": "read"
+    },
+    "get_user_profile": {
+      "class": "read"
+    },
+    "get_account_balances": {
+      "class": "read"
+    },
+    "get_account_historical_balances": {
+      "class": "read"
+    },
+    "get_account_history": {
+      "class": "read"
+    },
+    "get_gainloss": {
+      "class": "read"
+    },
+    "get_positions": {
+      "class": "read"
+    },
+    "get_orders": {
+      "class": "read"
+    },
+    "get_watchlists": {
+      "class": "read"
+    },
+    "get_market_quotes": {
+      "class": "read"
+    },
+    "get_company_profile": {
+      "class": "read"
+    },
+    "get_historical_data": {
+      "class": "read"
+    },
+    "get_market_calendar": {
+      "class": "read"
+    },
+    "get_options_chain": {
+      "class": "read"
+    },
+    "add_to_watchlist": {
+      "class": "benign_write"
+    },
+    "cancel_order": {
+      "class": "cancel",
+      "note": "Cancels one order (accountNumber, orderId)."
+    },
+    "place_equity_order": {
+      "class": "order",
+      "asset_class": "equity",
+      "fields": {
+        "symbol": "symbol",
+        "side": "side",
+        "qty": "quantity",
+        "price": [
+          "price",
+          "stop"
+        ]
+      },
+      "note": "Tradier passes every value as a string; quantity and price are parsed as numbers. Market orders have no price, so their value is unknown and they need approval."
+    },
+    "place_option_order": {
+      "class": "order",
+      "asset_class": "option",
+      "multiplier": 100,
+      "fields": {
+        "symbol": "symbol",
+        "side": "side",
+        "qty": "quantity",
+        "price": "price"
+      },
+      "note": "symbol is the underlying (optionSymbol is the OCC contract), so symbols_allow matches underlyings. Value = quantity x price x 100. Market orders need approval."
+    },
+    "place_multileg_option_order": {
+      "class": "order",
+      "asset_class": "option",
+      "fields": {
+        "symbol": "symbol"
+      },
+      "note": "2 to 4 legs passed as flat leg1OptionSymbol/leg1Side/leg1Quantity ... fields; a net debit/credit order has no single value, so it always needs approval."
+    },
+    "place_oco_order": {
+      "class": "order",
+      "note": "One-Cancels-Other order. Tradier's docs list per-order fields (Class, Symbol, OptionSymbol, Side, Quantity, Type, Duration, Price, Stop) for order1, order2 but not how they are keyed, so no fields are mapped: the value can't be computed and the call needs approval (or is blocked when symbols_allow is set)."
+    },
+    "place_oto_order": {
+      "class": "order",
+      "note": "One-Triggers-Other order. Tradier's docs list per-order fields (Class, Symbol, OptionSymbol, Side, Quantity, Type, Duration, Price, Stop) for order1, order2 but not how they are keyed, so no fields are mapped: the value can't be computed and the call needs approval (or is blocked when symbols_allow is set)."
+    },
+    "place_otoco_order": {
+      "class": "order",
+      "note": "One-Triggers-One-Cancels-Other order. Tradier's docs list per-order fields (Class, Symbol, OptionSymbol, Side, Quantity, Type, Duration, Price, Stop) for order1, order2, order3 but not how they are keyed, so no fields are mapped: the value can't be computed and the call needs approval (or is blocked when symbols_allow is set)."
+    }
+  },
+  "patterns": [
+    {
+      "match": "^get_",
+      "class": "read"
+    }
+  ]
+}

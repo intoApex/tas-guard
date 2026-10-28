@@ -205,6 +205,7 @@ A profile says what each tool of a server can do with money and where its order 
 - `alpaca-mcp-server`: alpacahq/alpaca-mcp-server @ 2a973a0
 - `ccxt-mcp-server`: ccxt/ccxt `mcp/` @ 310bf4b
 - `robinhood-trading-mcp`: Robinhood's hosted Trading MCP, from the 94-tool table in Robinhood's ["Trading with your agent"](https://robinhood.com/us/en/support/articles/trading-with-your-agent/) article (2026-10-21). The server is closed source and Robinhood publishes no argument names, so order values can't be read: every order needs approval, and a `symbols_allow` list blocks orders.
+- `tradier-mcp-server`: Tradier's hosted MCP server (`https://mcp.tradier.com/mcp`), from the 22-tool list with parameter names on Tradier's ["Tradier MCP"](https://docs.tradier.com/docs/tradier-mcp) docs page (2026-10-28). Equity and single-leg option orders are value-checked (quantity x price, x100 for options). Multi-leg, OCO, OTO and OTOCO orders and market orders have no computable value and need approval. Paper mode is detected only when the upstream env sets `PAPER_TRADING=true`; otherwise the guard assumes live money.
 
 Using a server without a profile? `"profile": "auto"` classifies tools by name and MCP annotations, and blocks anything it doesn't recognize. Profiles for more brokers are welcome as PRs.
 

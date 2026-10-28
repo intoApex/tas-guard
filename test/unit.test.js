@@ -10,12 +10,13 @@ import { State } from "../src/state.js";
 const alpaca = loadProfile("alpaca-mcp-server");
 const ccxt = loadProfile("ccxt-mcp-server");
 const robinhood = loadProfile("robinhood-trading-mcp");
+const tradier = loadProfile("tradier-mcp-server");
 const policy = resolvePolicy({ max_order_value: 500, max_daily_value: 1000, approve_over: 250, live_requires_approval: false });
 const usage = { spent: 0, orders: 0, recent: [] };
 const call = (name, args, extra = {}) => decide({ info: classify(alpaca, name), args, policy, usage, mode: "paper", killed: false, ...extra });
 
 test("built-in profiles load and every tool has a valid class", () => {
-  assert.deepEqual(listBuiltinProfiles().sort(), ["alpaca-mcp-server", "ccxt-mcp-server", "robinhood-trading-mcp"]);
+  assert.deepEqual(listBuiltinProfiles().sort(), ["alpaca-mcp-server", "ccxt-mcp-server", "robinhood-trading-mcp", "tradier-mcp-server"]);
   for (const s of listBuiltinProfiles()) assert.ok(Object.keys(loadProfile(s).tools).length > 5);
 });
 
@@ -46,6 +47,27 @@ test("robinhood profile: classes, no guessed order fields, fails safe", () => {
   assert.equal(d("place_equity_order", { live_requires_approval: false }), "approve", "value unknown without documented fields");
   assert.equal(d("place_equity_order", { symbols_allow: ["AAPL"] }), "block", "allow list can't be checked");
   assert.equal(d("exercise_option", {}), "approve");
+});
+
+test("tradier profile: documented tools, string values, option multiplier, fails safe", () => {
+  assert.equal(Object.keys(tradier.tools).length, 22);
+  assert.equal(classify(tradier, "get_positions").class, "read");
+  assert.equal(classify(tradier, "add_to_watchlist").class, "benign_write");
+  assert.equal(classify(tradier, "cancel_order").class, "cancel");
+  assert.equal(classify(tradier, "place_otoco_order").class, "order");
+  assert.equal(classify(tradier, "get_new_thing").source, "profile-pattern");
+  assert.equal(classify(tradier, "withdraw_funds").class, "unknown");
+  assert.equal(extractOrder(classify(tradier, "place_equity_order"), { accountNumber: "1", symbol: "aapl", side: "buy", quantity: "10", type: "limit", duration: "day", price: "150" }).value, 1500);
+  assert.equal(extractOrder(classify(tradier, "place_option_order"), { symbol: "SPY", optionSymbol: "SPY261218C00600000", side: "buy_to_open", quantity: "2", type: "limit", price: "1.25" }).value, 250);
+  assert.equal(extractOrder(classify(tradier, "place_multileg_option_order"), { symbol: "SPY", type: "debit", price: "1" }).value, undefined);
+  assert.equal(detectMode(tradier, {}), "live");
+  assert.equal(detectMode(tradier, { PAPER_TRADING: "true" }), "paper");
+  assert.equal(detectMode(tradier, { PAPER_TRADING: "false" }), "live");
+  const d = (name, args, p) => decide({ info: classify(tradier, name), args, policy: resolvePolicy(p), usage, mode: "paper", killed: false }).action;
+  assert.equal(d("place_equity_order", { symbol: "AAPL", side: "buy", quantity: "1", type: "limit", price: "100" }, { max_order_value: 500, approve_over: 250 }), "allow");
+  assert.equal(d("place_equity_order", { symbol: "AAPL", side: "buy", quantity: "10", type: "limit", price: "100" }, { max_order_value: 500 }), "block");
+  assert.equal(d("place_equity_order", { symbol: "AAPL", side: "buy", quantity: "1", type: "market" }, {}), "approve", "market order has no value");
+  assert.equal(d("place_oto_order", { accountNumber: "1" }, { symbols_allow: ["AAPL"] }), "block", "allow list can't be checked");
 });
 
 test("order value: notional, qty x price, option multiplier, multi-leg, junk", () => {
