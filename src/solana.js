@@ -287,18 +287,21 @@ export function decodeInstruction(ix, keys) {
 }
 
 /** Transaction fee in lamports: 5000 per signature plus the priority fee (unit price × unit limit). */
+/** Builtin programs get a default of 3,000 compute units per instruction, others 200,000 (SIMD-0170). */
+const BUILTINS = new Set([SYSTEM, COMPUTE_BUDGET, "Vote111111111111111111111111111111111111111", "Stake11111111111111111111111111111111111111", "Config1111111111111111111111111111111111111",
+  "BPFLoader1111111111111111111111111111111111", "BPFLoader2111111111111111111111111111111111", "BPFLoaderUpgradeab1e11111111111111111111111", "LoaderV411111111111111111111111111111111111", "AddressLookupTab1e1111111111111111111111111"]);
 export function computeFee(ixs, numSignatures, tx) {
   if (tx?.version === 1) { // v1: an absolute priority fee in the config; compute budget instructions are ignored
     const priority = tx.config?.priorityFee ?? 0n;
     return { lamports: 5000n * BigInt(numSignatures) + priority, priority, units: BigInt(tx.config?.computeUnitLimit ?? 0), microLamports: null };
   }
-  let limit, price = 0n, nonBudget = 0;
+  let limit, price = 0n, defaultUnits = 0;
   for (const ix of ixs) {
     if (ix.type === "setComputeUnitLimit") limit = ix.units;
     else if (ix.type === "setComputeUnitPrice") price = ix.microLamports;
-    else if (ix.programId !== COMPUTE_BUDGET) nonBudget++;
+    defaultUnits += BUILTINS.has(ix.programId) ? 3_000 : 200_000;
   }
-  const units = BigInt(limit ?? Math.min(1_400_000, 200_000 * Math.max(1, nonBudget)));
+  const units = BigInt(limit ?? Math.min(1_400_000, defaultUnits));
   const priority = (price * units + 999_999n) / 1_000_000n;
   return { lamports: 5000n * BigInt(numSignatures) + priority, priority, units, microLamports: price };
 }
