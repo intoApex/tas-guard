@@ -1,6 +1,8 @@
 # TAS Guard
 
-**A trading-aware safety proxy for AI agents.** Put it between your AI client (Claude, ChatGPT, Cursor, your own agent) and any broker or exchange MCP server. It enforces per-order and daily limits, symbol allowlists, human approvals, a kill switch and a tamper-evident audit log, before an order ever reaches your broker.
+**Limits for bots and AI that trade your money.** Put it between the software that trades for you (Claude, ChatGPT, Cursor, your own agent or bot) and your broker, exchange or wallet. It enforces per-order and daily limits, allow lists, human approvals, a kill switch and a tamper-evident audit log, before an order or transaction ever goes through. It runs on your own machine.
+
+**What it can't protect:** custodial bots and apps that keep your keys on their own servers (most Telegram trading bots), and bots that call an exchange's API directly instead of going through the guard.
 
 ![An agent's over-limit order is blocked, a market order is held, approved on the phone, then sent to the broker](docs/demo.gif)
 
