@@ -2,12 +2,12 @@
 // Speaks MCP's newline-delimited JSON-RPC directly, so the guard has no dependencies.
 import { spawn } from "node:child_process";
 import { classify, detectMode } from "./profiles.js";
-import { decide, staticAction } from "./policy.js";
+import { decide, staticAction, KILL_SWITCH_ALLOWED } from "./policy.js";
 import { canonical, sha256 } from "./state.js";
 import { TelegramApprover } from "./telegram.js";
 
 export const GUARD_TOOL = "tas_guard_status";
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 
 export class LineChannel {
   constructor(readable, writable, onMessage, onBadLine) {
@@ -41,18 +41,22 @@ export class GuardProxy {
    * @param {object|null} o.profile  connector profile (null = heuristics)
    * @param {object} o.policy        resolved policy
    * @param {import('./state.js').State} o.state
-   * @param {{command:string,args?:string[],env?:object,cwd?:string}} o.upstream
+   * @param {{command:string,args?:string[],env?:object,cwd?:string}} [o.upstream]  an MCP server to spawn, or:
+   * @param {object} [o.local]   an in-process upstream (Hyperliquid mode) with request(method, params, extra),
+   *                              and optionally prepare(name, args), summarize(name, args, prep), status(), describe()
+   * @param {string} [o.mode]    paper | live | testnet (default: from the profile and the upstream env)
    * @param {NodeJS.ReadableStream} [o.input]  client side (default stdin)
    * @param {NodeJS.WritableStream} [o.output] client side (default stdout)
    * @param {(s:string)=>void} [o.log]
    */
-  constructor({ profile, policy, state, upstream, approvals = {}, input = process.stdin, output = process.stdout, log = (s) => process.stderr.write("[tas-guard] " + s + "\n") }) {
+  constructor({ profile, policy, state, upstream = {}, local = null, mode, approvals = {}, input = process.stdin, output = process.stdout, log = (s) => process.stderr.write("[tas-guard] " + s + "\n") }) {
     this.profile = profile;
     this.policy = policy;
     this.state = state;
     this.log = log;
+    this.local = local;
     this.env = { ...process.env, ...(upstream.env || {}) };
-    this.mode = detectMode(profile, this.env);
+    this.mode = mode || detectMode(profile, this.env);
     this.ccy = profile?.quote_currency === "quote" ? "(quote ccy)" : profile?.quote_currency || "";
     this.tools = new Map();
     this.clientCaps = {};
@@ -67,6 +71,14 @@ export class GuardProxy {
       log("telegram approvals on");
     }
 
+    this.inflight = 0;
+    this.client = new LineChannel(input, output, (m) => { this.inflight++; this.fromClient(m).catch((e) => this.log("error: " + e.stack)).finally(() => this.inflight--); }, (l) => this.log("bad line from client: " + l.slice(0, 200)));
+    input.on("end", () => this.drainThenClose());
+    if (local) {
+      log(`guarding ${local.describe ? local.describe() : "an in-process server"} with profile ${profile ? profile.slug : "auto (heuristics)"}, mode ${this.mode}`);
+      return;
+    }
+
     // Windows can't spawn .cmd shims (npx, uvx installed via npm) without a shell; quote args for cmd.exe.
     const win = process.platform === "win32";
     const q = (a) => (/[\s"&|<>^]/.test(a) ? `"${String(a).replace(/"/g, '""')}"` : a);
@@ -74,9 +86,6 @@ export class GuardProxy {
     this.child.on("error", (e) => { this.log(`could not start upstream '${upstream.command}': ${e.message}`); process.exitCode = 1; this.close(); });
     this.child.on("exit", (code) => { this.log(`upstream exited (${code})`); this.onUpstreamExit?.(code); });
     this.up = new LineChannel(this.child.stdout, this.child.stdin, (m) => this.fromUpstream(m), (l) => this.log("bad line from upstream: " + l.slice(0, 200)));
-    this.inflight = 0;
-    this.client = new LineChannel(input, output, (m) => { this.inflight++; this.fromClient(m).catch((e) => this.log("error: " + e.stack)).finally(() => this.inflight--); }, (l) => this.log("bad line from client: " + l.slice(0, 200)));
-    input.on("end", () => this.drainThenClose());
     log(`guarding '${upstream.command}' with profile ${profile ? profile.slug : "auto (heuristics)"}, mode ${this.mode}`);
     // Which credentials the upstream gets, and from where (never the values): makes stale keys easy to spot.
     for (const [k, v] of Object.entries(this.env)) {
@@ -88,7 +97,11 @@ export class GuardProxy {
     }
   }
 
-  close() { this.tg?.stop(); try { this.child.stdin.end(); this.child.kill(); } catch {} }
+  close() {
+    this.tg?.stop();
+    if (this.local) { this.local.close?.(); this.onClosed?.(); return; }
+    try { this.child.stdin.end(); this.child.kill(); } catch {}
+  }
 
   /** Client hung up: let in-flight calls finish (up to 10s) so no order result is lost, then stop. */
   async drainThenClose() {
@@ -103,7 +116,8 @@ export class GuardProxy {
 
   // ---- plumbing ----
   nextId(prefix) { return `tg-${prefix}-${++this.seq}`; }
-  requestUpstream(method, params) {
+  requestUpstream(method, params, extra) {
+    if (this.local) return this.local.request(method, params, extra);
     const id = this.nextId("u");
     return new Promise((resolve, reject) => {
       this.toUpstream.set(id, { resolve, reject });
@@ -150,6 +164,7 @@ export class GuardProxy {
       return;
     }
     if (isNotification(m)) {
+      if (this.local) return; // nothing upstream to tell
       if (m.method === "notifications/cancelled" && m.params?.requestId !== undefined) {
         for (const [ours, p] of this.toUpstream) if (p.clientId === m.params.requestId) { this.up.send({ ...m, params: { ...m.params, requestId: ours } }); return; }
       }
@@ -170,6 +185,10 @@ export class GuardProxy {
     }
     if (m.method === "tools/list") return this.handleList(m);
     if (m.method === "tools/call") return this.handleCall(m);
+    if (this.local) {
+      try { return this.reply(m.id, await this.local.request(m.method, m.params)); }
+      catch (e) { return this.replyError(m.id, e.rpc || { code: -32603, message: e.message }); }
+    }
     // Everything else passes through untouched.
     const id = this.nextId("f");
     this.toUpstream.set(id, { clientId: m.id });
@@ -221,6 +240,7 @@ export class GuardProxy {
       limits: { max_order_value: p.max_order_value, max_daily_value: p.max_daily_value, max_orders_per_day: p.max_orders_per_day, max_orders_per_minute: p.max_orders_per_minute, approve_over: p.approve_over, symbols_allow: p.symbols_allow, symbols_block: p.symbols_block, live_requires_approval: p.live_requires_approval },
       today: { day: u.day, value_used: u.spent, value_left: Math.max(0, p.max_daily_value - u.spent), orders: u.orders, orders_left: Math.max(0, p.max_orders_per_day - u.orders) },
       pending_approvals: pending.map((i) => ({ id: i.id, tool: i.tool, summary: i.summary })),
+      ...(this.local?.status ? { venue: this.local.status() } : {}),
     };
   }
 
@@ -264,9 +284,22 @@ export class GuardProxy {
     if (name === GUARD_TOOL) return this.reply(m.id, textResult(JSON.stringify(this.status(), null, 2)));
 
     const info = classify(this.profile, name, this.tools.get(name) || {});
-    const d = decide({ info, args, policy: this.policy, usage: this.state.usage(), mode: this.mode, killed: this.state.killed() });
-    const summary = this.summarize(name, d);
-    const base = { tool: name, class: info.class, classified_by: info.source, mode: this.mode, args, decision: d.action, reason: d.reason, order_value: d.order?.value };
+    // In-process upstreams (Hyperliquid) validate and price the call first, so the policy sees the real
+    // notional and the canonical symbol; the prepared call is exactly what gets sent. Skipped when the
+    // call is blocked anyway (kill switch, blocked class), so those answers don't depend on the network.
+    let prep = null;
+    const blockedAnyway = staticAction(this.policy, info.class) === "block" || (this.state.killed() && !KILL_SWITCH_ALLOWED.has(info.class));
+    if (this.local?.prepare && !blockedAnyway) {
+      try { prep = await this.local.prepare(name, args); }
+      catch (e) {
+        this.state.audit({ tool: name, class: info.class, classified_by: info.source, mode: this.mode, args, decision: "block", reason: e.message, outcome: "invalid" });
+        return this.reply(m.id, textResult(`TAS Guard: ${e.message}`, true));
+      }
+    }
+    const pargs = prep?.policyArgs ?? args;
+    const d = decide({ info, args: pargs, policy: this.policy, usage: this.state.usage(), mode: this.mode, killed: this.state.killed() });
+    const summary = this.local?.summarize ? this.local.summarize(name, args, prep, d) : this.summarize(name, d);
+    const base = { tool: name, class: info.class, classified_by: info.source, mode: this.mode, args, decision: d.action, reason: d.reason, order_value: d.order?.value, ...(prep?.audit ? { order: prep.audit } : {}), ...(this.local ? { summary } : {}) };
 
     if (d.action === "block") {
       this.state.audit({ ...base, outcome: "blocked" });
@@ -318,11 +351,11 @@ export class GuardProxy {
       }
     }
 
-    if (!d.counts) return this.forward(m, base, approvedBy, d);
+    if (!d.counts) return this.forward(m, base, approvedBy, d, prep);
     // Orders run one at a time, and limits are re-checked right before sending,
     // so parallel calls (or a long approval wait) can't slip past the daily caps or the kill switch.
     const run = this.orderLock.then(async () => {
-      const fresh = decide({ info, args, policy: this.policy, usage: this.state.usage(), mode: this.mode, killed: this.state.killed() });
+      const fresh = decide({ info, args: pargs, policy: this.policy, usage: this.state.usage(), mode: this.mode, killed: this.state.killed() });
       if (fresh.action === "block") {
         this.state.audit({ ...base, decision: "block", reason: fresh.reason, outcome: "blocked", approved_by: approvedBy });
         this.alertBlocked(info, summary, fresh.reason);
@@ -332,15 +365,15 @@ export class GuardProxy {
         this.state.audit({ ...base, outcome: "blocked", reason: "needs approval (limits changed)" });
         return this.reply(m.id, textResult(`TAS Guard: this now needs human approval (${fresh.reason}). Repeat the call to start an approval.`, true));
       }
-      return this.forward(m, base, approvedBy, fresh);
+      return this.forward(m, base, approvedBy, fresh, prep);
     });
     this.orderLock = run.catch(() => {});
     return run;
   }
 
-  async forward(m, base, approvedBy, d) {
+  async forward(m, base, approvedBy, d, prep) {
     let result;
-    try { result = await this.requestUpstream("tools/call", m.params); }
+    try { result = await this.requestUpstream("tools/call", m.params, { prepared: prep }); }
     catch (e) {
       this.state.audit({ ...base, outcome: "upstream_error", approved_by: approvedBy, error: e.message });
       return this.replyError(m.id, e.rpc || { code: -32603, message: e.message });

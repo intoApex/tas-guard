@@ -1,0 +1,4419 @@
+{
+ "generated_by": "test/fixtures/gen-hl-vectors.py with hyperliquid-python-sdk 0.24.0, eth-account 0.13.7, msgpack 1.2.4",
+ "agent_key": "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+ "agent_address": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+ "main_key": "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
+ "main_address": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+ "builder": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+ "meta": {
+  "universe": [
+   {
+    "name": "BTC",
+    "szDecimals": 5,
+    "maxLeverage": 40
+   },
+   {
+    "name": "ETH",
+    "szDecimals": 4,
+    "maxLeverage": 25
+   },
+   {
+    "name": "SOL",
+    "szDecimals": 2,
+    "maxLeverage": 20
+   },
+   {
+    "name": "kPEPE",
+    "szDecimals": 0,
+    "maxLeverage": 10
+   }
+  ]
+ },
+ "spot_meta": {
+  "universe": [
+   {
+    "tokens": [
+     1,
+     0
+    ],
+    "name": "PURR/USDC",
+    "index": 0,
+    "isCanonical": true
+   },
+   {
+    "tokens": [
+     150,
+     0
+    ],
+    "name": "@107",
+    "index": 107,
+    "isCanonical": false
+   }
+  ],
+  "tokens": [
+   {
+    "name": "USDC",
+    "szDecimals": 8,
+    "weiDecimals": 8,
+    "index": 0,
+    "tokenId": "0x6d1e7cde53ba9467b783cb7c530ce054",
+    "isCanonical": true
+   },
+   {
+    "name": "PURR",
+    "szDecimals": 0,
+    "weiDecimals": 5,
+    "index": 1,
+    "tokenId": "0xc1fb593aeffbeb02f85e0308e9956a90",
+    "isCanonical": true
+   },
+   {
+    "name": "HYPE",
+    "szDecimals": 2,
+    "weiDecimals": 8,
+    "index": 150,
+    "tokenId": "0x0d01dc56dcaaca66ad901c959b4011ec",
+    "isCanonical": false
+   }
+  ]
+ },
+ "actions": [
+  {
+   "name": "order_with_builder",
+   "network": "mainnet",
+   "nonce": 1761739200001,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "BTC",
+    "side": "buy",
+    "size": 0.01,
+    "price": 60123.0,
+    "tif": "Gtc",
+    "reduce_only": false,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 0,
+       "b": true,
+       "p": "60123",
+       "s": "0.01",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Gtc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200001,
+    "signature": {
+     "r": "0xd6f347736bdecfddc8dc71ccf8f3f94c8535707e879e4dcad14baa53b4d3f235",
+     "s": "0x286b96d9f0cc7781153d229c004813f0c47617ca30b7248e6f5d168e68c1dcfa",
+     "v": 28
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a16100a162c3a170a53630313233a173a4302e3031a172c2a17481a56c696d697481a3746966a3477463a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0xefe414a1b3218ecd55e046f63299ca65eb25390db18d05055cec36d8100da939",
+   "digest": "0xa4db92b474d6232aaf614432e9f6c98661a10dac144e67ea38773c031c165470"
+  },
+  {
+   "name": "order_without_builder",
+   "network": "mainnet",
+   "nonce": 1761739200002,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "ETH",
+    "side": "sell",
+    "size": 0.5,
+    "price": 2345.6,
+    "tif": "Alo",
+    "reduce_only": true,
+    "builder": null
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 1,
+       "b": false,
+       "p": "2345.6",
+       "s": "0.5",
+       "r": true,
+       "t": {
+        "limit": {
+         "tif": "Alo"
+        }
+       }
+      }
+     ],
+     "grouping": "na"
+    },
+    "nonce": 1761739200002,
+    "signature": {
+     "r": "0xd025818364844c47d59e4342b3d1b691e3d253bf4a456c653969ddba114a20e9",
+     "s": "0x168be8b357d9ce538fdad09cb52936a39da9d7e7b044c6ee220be9a8055e3804",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "83a474797065a56f72646572a66f72646572739186a16101a162c2a170a6323334352e36a173a3302e35a172c3a17481a56c696d697481a3746966a3416c6fa867726f7570696e67a26e61",
+   "connection_id": "0x1be283742a6df90ab0014527805749b53c6779bbd4d7e007e0de268331647e25",
+   "digest": "0x3634e5e294b9d990870afb9138c68c50d4e8f4d305bbf911d9bc84804cc4479a"
+  },
+  {
+   "name": "market_open_with_builder",
+   "network": "mainnet",
+   "nonce": 1761739200003,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "ETH",
+    "side": "buy",
+    "size": 0.25,
+    "mid": 2345.678,
+    "slippage": 0.01,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 1,
+       "b": true,
+       "p": "2369.1",
+       "s": "0.25",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Ioc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200003,
+    "signature": {
+     "r": "0x3726c8ca73dc0a8529c663e69c2598d51fa98b3a5542822bfa018fc071db1926",
+     "s": "0x50d0dcf3560facb769cc6eaf4c6445763a2fc9ce7766d41c4326644fa6a97b48",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a16101a162c3a170a6323336392e31a173a4302e3235a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0x2fb74d84a7219346f041b3940106811d0f6efff634c0652511edccdfbde29a1e",
+   "digest": "0x83706b65b4b0015c0fbde3217e4c2ffb5fcee599f0f7e8a29350363fbb6ca95c"
+  },
+  {
+   "name": "spot_order_with_builder",
+   "network": "mainnet",
+   "nonce": 1761739200004,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "HYPE/USDC",
+    "side": "sell",
+    "size": 1.5,
+    "price": 41.237,
+    "tif": "Ioc",
+    "reduce_only": false,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 10107,
+       "b": false,
+       "p": "41.237",
+       "s": "1.5",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Ioc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200004,
+    "signature": {
+     "r": "0x6329a2e2594b8deadc693d5f146f227faeffc76f7778ffb07d93543b894e3254",
+     "s": "0x6a830cd39dccaf21d9a2de75f8b5417537f2185962bfb5df6bda12add45acb49",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a161cd277ba162c2a170a634312e323337a173a3312e35a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0x9f0c64756ff8044a39f65ad5bf1265ccc3614e23df4356b33cc55e6316bb4bd7",
+   "digest": "0xea409de188879d4fd6e47c23b13b50555f5f553d87165915649d926c31089d1f"
+  },
+  {
+   "name": "cancel",
+   "network": "mainnet",
+   "nonce": 1761739200005,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "BTC",
+    "oid": 123456789012
+   },
+   "payload": {
+    "action": {
+     "type": "cancel",
+     "cancels": [
+      {
+       "a": 0,
+       "o": 123456789012
+      }
+     ]
+    },
+    "nonce": 1761739200005,
+    "signature": {
+     "r": "0x9106d05bd73fe4688d9d9f9630a86f816825a2a40dba254653c73add0a33841b",
+     "s": "0x14e89586e2139b2b5e896cb9ad008a4521179e6c4bab9d83d524140c6572c5ad",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "82a474797065a663616e63656ca763616e63656c739182a16100a16fcf0000001cbe991a14",
+   "connection_id": "0x9ebf53761a72ca94dd93918771a5a895c711ab517ab2cd3fc26b0f4e7c640918",
+   "digest": "0x09e21e09ebaf7a1699bbd12c9d20eaece96092ca68235b573b385ab2422bf2dc"
+  },
+  {
+   "name": "update_leverage",
+   "network": "mainnet",
+   "nonce": 1761739200006,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "ETH",
+    "leverage": 5,
+    "is_cross": false
+   },
+   "payload": {
+    "action": {
+     "type": "updateLeverage",
+     "asset": 1,
+     "isCross": false,
+     "leverage": 5
+    },
+    "nonce": 1761739200006,
+    "signature": {
+     "r": "0x58fd415966eeb9b7b7a3856a45c9ba1ac4b75fbf37bff1782e683e621f74ce88",
+     "s": "0x41f444e0312a7e73c0a029c64dfaf52de88024ee066610af91d955b28fef3472",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065ae7570646174654c65766572616765a5617373657401a7697343726f7373c2a86c6576657261676505",
+   "connection_id": "0xc0d65e1cfa9ad352031b47ed259d5258dd9909ebf20b73c8c526cd0f028004f3",
+   "digest": "0x4eca17d4757dce42a4a7a4075ee1ffc2b05ef7dc54e9247d8e6f89cac4e1d1a0"
+  },
+  {
+   "name": "approve_builder_fee",
+   "network": "mainnet",
+   "nonce": 1761739200007,
+   "signer": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+   "params": {
+    "builder": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+    "max_fee_rate": "0.02%"
+   },
+   "payload": {
+    "action": {
+     "maxFeeRate": "0.02%",
+     "builder": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+     "nonce": 1761739200007,
+     "type": "approveBuilderFee",
+     "signatureChainId": "0x66eee",
+     "hyperliquidChain": "Mainnet"
+    },
+    "nonce": 1761739200007,
+    "signature": {
+     "r": "0x339e15b74c7c90901cca3fb07281ba6813aa775ff5d3d540c1f74a6a33c6ee98",
+     "s": "0x1ee604eb224b9697a57ff4c9b32af7181599d1cb7b0d6af3242d79a863dfeb1d",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "user",
+   "digest": "0xf33a182bdf6c7aefc7b90cf2058b4e06f7808dc3d8359410cae8333fd8c61640"
+  },
+  {
+   "name": "order_short_signature",
+   "network": "mainnet",
+   "nonce": 1761739200105,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "SOL",
+    "side": "buy",
+    "size": 2,
+    "price": 150.25,
+    "tif": "Gtc",
+    "reduce_only": false,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 2,
+       "b": true,
+       "p": "150.25",
+       "s": "2",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Gtc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200105,
+    "signature": {
+     "r": "0x7e630c5ff57a6511cc00fcb6d93a32e88591b188ced39153a97aa84c013b39e6",
+     "s": "0x18bdc918cddb5bbdb920677fff58465c961323c6495ca15082dceb9ed88a317",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a16102a162c3a170a63135302e3235a173a132a172c2a17481a56c696d697481a3746966a3477463a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0x3d2d44e33862d145391dad65650b69fee802aede587ed247013fe57b5199561f",
+   "digest": "0xc65168b339f32f0414a911a5a064af403be50580e5de2f2b42934a03537006a2"
+  },
+  {
+   "name": "order_with_builder",
+   "network": "testnet",
+   "nonce": 1761739200501,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "BTC",
+    "side": "buy",
+    "size": 0.01,
+    "price": 60123.0,
+    "tif": "Gtc",
+    "reduce_only": false,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 0,
+       "b": true,
+       "p": "60123",
+       "s": "0.01",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Gtc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200501,
+    "signature": {
+     "r": "0x625e9112a678561382c846b7c8c13866fa00491300d81b975d73eb0b044c22e5",
+     "s": "0x128c90f7f4fba54333eb98a012042a23a83ef6b95d1bf2df06f5fe5cbb71cf7",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a16100a162c3a170a53630313233a173a4302e3031a172c2a17481a56c696d697481a3746966a3477463a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0x6641529423f663ea5170e7bfee974fe4d86acc3ae2ed1982e8d77cc37049142b",
+   "digest": "0x8fa1556e9c39c8d9fd5ea2eb08b908e93dfeac836cfd4f7a51051922353cf4e6"
+  },
+  {
+   "name": "order_without_builder",
+   "network": "testnet",
+   "nonce": 1761739200502,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "ETH",
+    "side": "sell",
+    "size": 0.5,
+    "price": 2345.6,
+    "tif": "Alo",
+    "reduce_only": true,
+    "builder": null
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 1,
+       "b": false,
+       "p": "2345.6",
+       "s": "0.5",
+       "r": true,
+       "t": {
+        "limit": {
+         "tif": "Alo"
+        }
+       }
+      }
+     ],
+     "grouping": "na"
+    },
+    "nonce": 1761739200502,
+    "signature": {
+     "r": "0xff4ae280b4063bd5f9e2590f25e697fff581f2bca4d9ad79cd6af19645134471",
+     "s": "0x39ba54649750a62fc12c1c296db1303c8c9f5aacb9118c33e8f8d63fe29c75c9",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "83a474797065a56f72646572a66f72646572739186a16101a162c2a170a6323334352e36a173a3302e35a172c3a17481a56c696d697481a3746966a3416c6fa867726f7570696e67a26e61",
+   "connection_id": "0xdf08fabc54a2aab42a35ed56ffb2fac5b33aaef85effd06f445332da834030cc",
+   "digest": "0x66b7909c62956a329693e0a5004e02e03d16513ba339150ff2439b48fe2274df"
+  },
+  {
+   "name": "market_open_with_builder",
+   "network": "testnet",
+   "nonce": 1761739200503,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "ETH",
+    "side": "buy",
+    "size": 0.25,
+    "mid": 2345.678,
+    "slippage": 0.01,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 1,
+       "b": true,
+       "p": "2369.1",
+       "s": "0.25",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Ioc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200503,
+    "signature": {
+     "r": "0x72e6312cfdf472c048213aa2f22d9e6d99f0957fc3047c995be459c0e8f28cc9",
+     "s": "0x29c79c6cf5626e93dc161f4788924d0a805cf1dca38ca038e22c01c110678fa2",
+     "v": 28
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a16101a162c3a170a6323336392e31a173a4302e3235a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0xc08688ffd2d32deca932c8ebb9843ba67fee30174b3e538e1b1d4519392bf6b7",
+   "digest": "0x73e50c4e29d7f6a3fd0f8326bd12f30f47e0a56d2580dc8d99622928de5675c1"
+  },
+  {
+   "name": "spot_order_with_builder",
+   "network": "testnet",
+   "nonce": 1761739200504,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "HYPE/USDC",
+    "side": "sell",
+    "size": 1.5,
+    "price": 41.237,
+    "tif": "Ioc",
+    "reduce_only": false,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 10107,
+       "b": false,
+       "p": "41.237",
+       "s": "1.5",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Ioc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200504,
+    "signature": {
+     "r": "0xeb4ea68e67815b1306eb6cb7dce7648f36bee7cfe58ec4b81776114324a3a1e1",
+     "s": "0xcdbb69bfd6b9da3ca7b44bdf75c2b9288d8b0e36dbfef20ddb7ac3e7e129550",
+     "v": 28
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a161cd277ba162c2a170a634312e323337a173a3312e35a172c2a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0x883073cc1c095231609773a28caaba40dddc1095c4ecafbad855d9dc5027ebd2",
+   "digest": "0x0c31a7de7dc1253c3fccfd5ea959d2efe4e2b9379e1a1fce80b257201ef790c0"
+  },
+  {
+   "name": "cancel",
+   "network": "testnet",
+   "nonce": 1761739200505,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "BTC",
+    "oid": 123456789012
+   },
+   "payload": {
+    "action": {
+     "type": "cancel",
+     "cancels": [
+      {
+       "a": 0,
+       "o": 123456789012
+      }
+     ]
+    },
+    "nonce": 1761739200505,
+    "signature": {
+     "r": "0x3f8d158b030110ff4b023689a301f0aa26a22413d47e99193ed4b5d811d1bc29",
+     "s": "0x6b6f29318107a437fd24f6a6b30885b9e689bf469d1c31e49c2b318dc8aaef1c",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "82a474797065a663616e63656ca763616e63656c739182a16100a16fcf0000001cbe991a14",
+   "connection_id": "0x3f1f3ab11470c1228943277bd042e7157b6cf19283a036a623f97fafbae98722",
+   "digest": "0x97b8ec4d4e3abcc32bfa1ab26c83e36d13eb49b0524322f7d4c45ced95f8f39a"
+  },
+  {
+   "name": "update_leverage",
+   "network": "testnet",
+   "nonce": 1761739200506,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "ETH",
+    "leverage": 5,
+    "is_cross": false
+   },
+   "payload": {
+    "action": {
+     "type": "updateLeverage",
+     "asset": 1,
+     "isCross": false,
+     "leverage": 5
+    },
+    "nonce": 1761739200506,
+    "signature": {
+     "r": "0x5ee8cbf9e60cfb5e4f0aaec5fd3906891f221840649a2a50e5b5fed23275e51a",
+     "s": "0x192a25b01d67a998a99f7b55686d8d38f9b32c9c13c65b03e22bc2e20be8d0bf",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065ae7570646174654c65766572616765a5617373657401a7697343726f7373c2a86c6576657261676505",
+   "connection_id": "0x6ba46d5f9131132e64b034da34650b1bde7bb092241a2aa7c3777e2fe439c185",
+   "digest": "0xb5fee364e69e904030c126247ade36e471630979f9f9c08781f8577856dbcecf"
+  },
+  {
+   "name": "approve_builder_fee",
+   "network": "testnet",
+   "nonce": 1761739200507,
+   "signer": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+   "params": {
+    "builder": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+    "max_fee_rate": "0.02%"
+   },
+   "payload": {
+    "action": {
+     "maxFeeRate": "0.02%",
+     "builder": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+     "nonce": 1761739200507,
+     "type": "approveBuilderFee",
+     "signatureChainId": "0x66eee",
+     "hyperliquidChain": "Testnet"
+    },
+    "nonce": 1761739200507,
+    "signature": {
+     "r": "0x916d0815501673bd4d921661d894f53a0df40219e77e0fd5ce4fec759d55837",
+     "s": "0x463f7dd5fb3b17218b812529dcb62d27ad6bf018b20c4d6994d44499fae1dad8",
+     "v": 27
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "user",
+   "digest": "0x9163646b69202decea3b301fac75b3ccb6cc740d87b138dfb76622a15a16d51b"
+  },
+  {
+   "name": "order_short_signature",
+   "network": "testnet",
+   "nonce": 1761739200603,
+   "signer": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+   "params": {
+    "coin": "SOL",
+    "side": "buy",
+    "size": 2,
+    "price": 150.25,
+    "tif": "Gtc",
+    "reduce_only": false,
+    "builder": {
+     "b": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+     "f": 20
+    }
+   },
+   "payload": {
+    "action": {
+     "type": "order",
+     "orders": [
+      {
+       "a": 2,
+       "b": true,
+       "p": "150.25",
+       "s": "2",
+       "r": false,
+       "t": {
+        "limit": {
+         "tif": "Gtc"
+        }
+       }
+      }
+     ],
+     "grouping": "na",
+     "builder": {
+      "b": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "f": 20
+     }
+    },
+    "nonce": 1761739200603,
+    "signature": {
+     "r": "0xd34fd2bff4dae91be7916ad1220512b217428aa4b44b18777306c66647d93b93",
+     "s": "0x92b1cba21d02ccfa3b09d154724e45dcf13a7ae52c401e50e7ee3996913e0a1",
+     "v": 28
+    },
+    "vaultAddress": null,
+    "expiresAfter": null
+   },
+   "kind": "l1",
+   "msgpack": "84a474797065a56f72646572a66f72646572739186a16102a162c3a170a63135302e3235a173a132a172c2a17481a56c696d697481a3746966a3477463a867726f7570696e67a26e61a76275696c64657282a162d92a307833633434636464646236613930306661326235383564643239396530336431326661343239336263a16614",
+   "connection_id": "0x0134d361073acaf41e4bdc242faf6680db67b7c9537d0acf31f1e485b5c3b6c0",
+   "digest": "0x0da63a622b4c311fd730b9194946bafb1e356fa9a18f09b20383482ba541c9de"
+  }
+ ],
+ "keccak": [
+  {
+   "hex": "",
+   "keccak": "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+  },
+  {
+   "hex": "616263",
+   "keccak": "4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45"
+  },
+  {
+   "hex": "03",
+   "keccak": "69c322e3248a5dfc29d73c5b0553b0185a35cd5bb6386747517ef7e53b15e287"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d",
+   "keccak": "152cc5298108a3ec3a26e0c5aead9c2770c184a6bdf87eb087716b185c8e2238"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d84",
+   "keccak": "515efa1a7d43f655443dff20ec3f7e75e2af9ec2415ca813d21d0918a0e70fa2"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6ad",
+   "keccak": "00ef96af9cf4b24c7f269d922294444a197d0a33638c2e56634c57e892103a8f"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4",
+   "keccak": "742061bcad767ed4c4f5883b1dcb1aad11afdcc140dc469d953759b127b9f9ed"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bb",
+   "keccak": "e3371f61e770abf254c34239c3b0099ad90594507415bc81dd0a10b9692bbf2a"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e65",
+   "keccak": "4401c4afbe16ff911bdbf2d38e556e5b861f3fdf0f9d4306b1c46f6ae4f73584"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c",
+   "keccak": "ac141fd7b0a0ffcd2e967254d508da3ec616596493c36fa304425647d90e6de5"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c73",
+   "keccak": "16192ea86793083e47731cb3c970600f04768414d92bc0540e54ce8607a0fce0"
+  },
+  {
+   "hex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa01080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6fd040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d54",
+   "keccak": "80cdc8dd52cbb3dbaea8f383209893fa2bb52efbd5aedbb4b26dcfe307fcdc9b"
+  }
+ ],
+ "msgpack": [
+  {
+   "value": 0,
+   "msgpack": "00"
+  },
+  {
+   "value": 1,
+   "msgpack": "01"
+  },
+  {
+   "value": 127,
+   "msgpack": "7f"
+  },
+  {
+   "value": 128,
+   "msgpack": "cc80"
+  },
+  {
+   "value": 255,
+   "msgpack": "ccff"
+  },
+  {
+   "value": 256,
+   "msgpack": "cd0100"
+  },
+  {
+   "value": 65535,
+   "msgpack": "cdffff"
+  },
+  {
+   "value": 65536,
+   "msgpack": "ce00010000"
+  },
+  {
+   "value": 4294967295,
+   "msgpack": "ceffffffff"
+  },
+  {
+   "value": 4294967296,
+   "msgpack": "cf0000000100000000"
+  },
+  {
+   "value": 9007199254740992,
+   "msgpack": "cf0020000000000000"
+  },
+  {
+   "value": -1,
+   "msgpack": "ff"
+  },
+  {
+   "value": -32,
+   "msgpack": "e0"
+  },
+  {
+   "value": -33,
+   "msgpack": "d0df"
+  },
+  {
+   "value": -128,
+   "msgpack": "d080"
+  },
+  {
+   "value": -129,
+   "msgpack": "d1ff7f"
+  },
+  {
+   "value": -32768,
+   "msgpack": "d18000"
+  },
+  {
+   "value": -32769,
+   "msgpack": "d2ffff7fff"
+  },
+  {
+   "value": -2147483648,
+   "msgpack": "d280000000"
+  },
+  {
+   "value": -2147483649,
+   "msgpack": "d3ffffffff7fffffff"
+  },
+  {
+   "value": true,
+   "msgpack": "c3"
+  },
+  {
+   "value": false,
+   "msgpack": "c2"
+  },
+  {
+   "value": null,
+   "msgpack": "c0"
+  },
+  {
+   "value": "",
+   "msgpack": "a0"
+  },
+  {
+   "value": "a",
+   "msgpack": "a161"
+  },
+  {
+   "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "msgpack": "bf78787878787878787878787878787878787878787878787878787878787878"
+  },
+  {
+   "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "msgpack": "d9207878787878787878787878787878787878787878787878787878787878787878"
+  },
+  {
+   "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "msgpack": "d9ff787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878"
+  },
+  {
+   "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "msgpack": "da010078787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878"
+  },
+  {
+   "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "msgpack": "da012c787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878"
+  },
+  {
+   "value": "\u00fc\u00f1\u00ed\u20ac",
+   "msgpack": "a9c3bcc3b1c3ade282ac"
+  },
+  {
+   "value": 1.5,
+   "msgpack": "cb3ff8000000000000"
+  },
+  {
+   "value": -0.25,
+   "msgpack": "cbbfd0000000000000"
+  },
+  {
+   "value": 0.1,
+   "msgpack": "cb3fb999999999999a"
+  },
+  {
+   "value": [],
+   "msgpack": "90"
+  },
+  {
+   "value": [
+    1,
+    2
+   ],
+   "msgpack": "920102"
+  },
+  {
+   "value": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "msgpack": "dc0010000102030405060708090a0b0c0d0e0f"
+  },
+  {
+   "value": {},
+   "msgpack": "80"
+  },
+  {
+   "value": {
+    "a": 1,
+    "b": [
+     true,
+     null
+    ]
+   },
+   "msgpack": "82a16101a16292c3c0"
+  },
+  {
+   "value": {
+    "k0": 0,
+    "k1": 1,
+    "k2": 2,
+    "k3": 3,
+    "k4": 4,
+    "k5": 5,
+    "k6": 6,
+    "k7": 7,
+    "k8": 8,
+    "k9": 9,
+    "k10": 10,
+    "k11": 11,
+    "k12": 12,
+    "k13": 13,
+    "k14": 14,
+    "k15": 15
+   },
+   "msgpack": "de0010a26b3000a26b3101a26b3202a26b3303a26b3404a26b3505a26b3606a26b3707a26b3808a26b3909a36b31300aa36b31310ba36b31320ca36b31330da36b31340ea36b31350f"
+  },
+  {
+   "value": {
+    "$big": "18446744073709551615"
+   },
+   "msgpack": "cfffffffffffffffff"
+  },
+  {
+   "value": {
+    "$big": "9223372036854775808"
+   },
+   "msgpack": "cf8000000000000000"
+  },
+  {
+   "value": {
+    "$big": "-9223372036854775808"
+   },
+   "msgpack": "d38000000000000000"
+  }
+ ],
+ "float_to_wire": [
+  {
+   "value": 0,
+   "wire": "0"
+  },
+  {
+   "value": 1,
+   "wire": "1"
+  },
+  {
+   "value": 0.1,
+   "wire": "0.1"
+  },
+  {
+   "value": 1e-08,
+   "wire": "0.00000001"
+  },
+  {
+   "value": 1.23456789,
+   "wire": "1.23456789"
+  },
+  {
+   "value": 123456.789,
+   "wire": "123456.789"
+  },
+  {
+   "value": 60123.4,
+   "wire": "60123.4"
+  },
+  {
+   "value": 1.2345e-05,
+   "error": true
+  },
+  {
+   "value": 1e-09,
+   "error": true
+  },
+  {
+   "value": 2345.6789012,
+   "wire": "2345.6789012"
+  },
+  {
+   "value": 100,
+   "wire": "100"
+  },
+  {
+   "value": 100.1,
+   "wire": "100.1"
+  },
+  {
+   "value": 3.0000000001,
+   "error": true
+  },
+  {
+   "value": 0.30000000000000004,
+   "wire": "0.3"
+  },
+  {
+   "value": 123456789.12345678,
+   "wire": "123456789.12345678"
+  },
+  {
+   "value": 0.001953125,
+   "error": true
+  },
+  {
+   "value": 0.5,
+   "wire": "0.5"
+  },
+  {
+   "value": 99999.99999999,
+   "wire": "99999.99999999"
+  },
+  {
+   "value": 1000000000000000.0,
+   "wire": "1000000000000000"
+  },
+  {
+   "value": 7.5e-05,
+   "wire": "0.000075"
+  },
+  {
+   "value": 41.237,
+   "wire": "41.237"
+  }
+ ],
+ "slippage_price": [
+  {
+   "mid": 1.03125,
+   "is_buy": true,
+   "slippage": 0.0,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 1.0312
+  },
+  {
+   "mid": 2345.678,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 2369.1
+  },
+  {
+   "mid": 60000,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 57000.0
+  },
+  {
+   "mid": 1.2345e-05,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 1.2e-05
+  },
+  {
+   "mid": 41.237,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 40.825
+  },
+  {
+   "mid": 123456.7,
+   "is_buy": true,
+   "slippage": 0.0,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 123460.0
+  },
+  {
+   "mid": 9.99995,
+   "is_buy": true,
+   "slippage": 0.0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 10.0
+  },
+  {
+   "mid": 0.00999995,
+   "is_buy": false,
+   "slippage": 0.0,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.01
+  },
+  {
+   "mid": 25.8841724,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 25.11
+  },
+  {
+   "mid": 2006.3,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 2206.9
+  },
+  {
+   "mid": 0.004916,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.004424
+  },
+  {
+   "mid": 7002.475,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 6792.4
+  },
+  {
+   "mid": 45706.03,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 41135.0
+  },
+  {
+   "mid": 9800.0,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 9809.8
+  },
+  {
+   "mid": 115158.44,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 103640.0
+  },
+  {
+   "mid": 50.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 52.5
+  },
+  {
+   "mid": 1.606e-06,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 99625.3,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 102610.0
+  },
+  {
+   "mid": 3055.84452,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 3147.5
+  },
+  {
+   "mid": 15180.0,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 15165.0
+  },
+  {
+   "mid": 0.0002,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 500000.0,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 495000.0
+  },
+  {
+   "mid": 557.763,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 501.99
+  },
+  {
+   "mid": 0.00138,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0014
+  },
+  {
+   "mid": 0.000200625396,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.0002
+  },
+  {
+   "mid": 0.02,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.021
+  },
+  {
+   "mid": 0.3434159,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.3
+  },
+  {
+   "mid": 16.28,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 16.443
+  },
+  {
+   "mid": 4.3,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 4.73
+  },
+  {
+   "mid": 0.0002159665,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 40.0,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 41.2
+  },
+  {
+   "mid": 0.0048225925,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.004871
+  },
+  {
+   "mid": 0.0046061112,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.00438
+  },
+  {
+   "mid": 6986.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 7335.3
+  },
+  {
+   "mid": 1.1e-06,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 13.49988,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 13.5
+  },
+  {
+   "mid": 0.00022216609,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.000222
+  },
+  {
+   "mid": 3088.0,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 3103.4
+  },
+  {
+   "mid": 1.72e-05,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 49.346254,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 49.396
+  },
+  {
+   "mid": 9.2043715e-06,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.0
+  },
+  {
+   "mid": 3080.0,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 3083.1
+  },
+  {
+   "mid": 39.0384,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 42.942
+  },
+  {
+   "mid": 1000.0,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 995.0
+  },
+  {
+   "mid": 0.0001,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 7.64e-05,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.07181,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.07181
+  },
+  {
+   "mid": 2865.31,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 2836.7
+  },
+  {
+   "mid": 7.7e-06,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 1e-05
+  },
+  {
+   "mid": 9.0,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 9.9
+  },
+  {
+   "mid": 0.000860024341,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 317388.336,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 315800.0
+  },
+  {
+   "mid": 1.214303e-06,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 1e-06
+  },
+  {
+   "mid": 0.007,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.0077
+  },
+  {
+   "mid": 0.03083488,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.03053
+  },
+  {
+   "mid": 0.914,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.92314
+  },
+  {
+   "mid": 4.05621981,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 4.0522
+  },
+  {
+   "mid": 17.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 16.49
+  },
+  {
+   "mid": 0.126369061,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.12574
+  },
+  {
+   "mid": 39.286,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 41.25
+  },
+  {
+   "mid": 900000.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 873000.0
+  },
+  {
+   "mid": 240.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 240.0
+  },
+  {
+   "mid": 0.0670130738,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.06701
+  },
+  {
+   "mid": 53.47621,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 53.476
+  },
+  {
+   "mid": 23.7970105,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 23.773
+  },
+  {
+   "mid": 10.4932,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 10.493
+  },
+  {
+   "mid": 0.0005454918,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.0433581,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.044659
+  },
+  {
+   "mid": 15.886191,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 16.363
+  },
+  {
+   "mid": 0.0023547,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00235
+  },
+  {
+   "mid": 5.53e-05,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 5.807e-05
+  },
+  {
+   "mid": 2800.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 2940.0
+  },
+  {
+   "mid": 0.116741605,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.1
+  },
+  {
+   "mid": 1.22e-05,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.0
+  },
+  {
+   "mid": 300.0,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 299.7
+  },
+  {
+   "mid": 0.00635566,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0064
+  },
+  {
+   "mid": 0.012,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.0116
+  },
+  {
+   "mid": 0.0020225,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00202
+  },
+  {
+   "mid": 43511.9,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 43947.0
+  },
+  {
+   "mid": 0.1904,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.185
+  },
+  {
+   "mid": 0.000310859165,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.272,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.2856
+  },
+  {
+   "mid": 0.00138,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0014
+  },
+  {
+   "mid": 0.001,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.001
+  },
+  {
+   "mid": 3.5e-05,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 153684.6,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 138320.0
+  },
+  {
+   "mid": 519.123267,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 519.12
+  },
+  {
+   "mid": 7.07,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 7.07
+  },
+  {
+   "mid": 900000.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 900000.0
+  },
+  {
+   "mid": 24.2287,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 23.502
+  },
+  {
+   "mid": 13.484,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 13.42
+  },
+  {
+   "mid": 1360.0,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 1400.8
+  },
+  {
+   "mid": 0.176108,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.194
+  },
+  {
+   "mid": 1.1259591e-06,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.00118,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.001
+  },
+  {
+   "mid": 0.18213,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.177
+  },
+  {
+   "mid": 0.02,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.0194
+  },
+  {
+   "mid": 0.29396676,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.30867
+  },
+  {
+   "mid": 562.20045,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 579.07
+  },
+  {
+   "mid": 0.00065532814,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00064
+  },
+  {
+   "mid": 622.6,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 623.22
+  },
+  {
+   "mid": 0.004975234,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.165,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.17
+  },
+  {
+   "mid": 1.87008172e-05,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 1.9e-05
+  },
+  {
+   "mid": 34.05,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 34.05
+  },
+  {
+   "mid": 35.686149,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 35.6
+  },
+  {
+   "mid": 0.000578487623,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 960000.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 960000.0
+  },
+  {
+   "mid": 0.0005,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.001
+  },
+  {
+   "mid": 4e-06,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.0
+  },
+  {
+   "mid": 936846.247,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 843160.0
+  },
+  {
+   "mid": 9206.7765,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 9206.8
+  },
+  {
+   "mid": 300000.0,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 270000.0
+  },
+  {
+   "mid": 0.00209,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.0021945
+  },
+  {
+   "mid": 4.8546e-05,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.0
+  },
+  {
+   "mid": 1.8384,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 1.9
+  },
+  {
+   "mid": 28330.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 29746.0
+  },
+  {
+   "mid": 180.0,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 162.0
+  },
+  {
+   "mid": 6754.45,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 6720.7
+  },
+  {
+   "mid": 712593.03,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 748220.0
+  },
+  {
+   "mid": 62.3,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 61.988
+  },
+  {
+   "mid": 21.55232,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 21.45
+  },
+  {
+   "mid": 1227.7,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 1104.9
+  },
+  {
+   "mid": 0.00170863888,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.0152969,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0153
+  },
+  {
+   "mid": 0.000609171116,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.001
+  },
+  {
+   "mid": 0.0005987,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.0005957
+  },
+  {
+   "mid": 0.0039276007,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.004
+  },
+  {
+   "mid": 3.8864e-06,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 1755.76,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 1668.0
+  },
+  {
+   "mid": 127548.25,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 140300.0
+  },
+  {
+   "mid": 973966.078,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 974940.0
+  },
+  {
+   "mid": 1.77384694e-06,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 3084.13,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 2929.9
+  },
+  {
+   "mid": 7.61567,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 7.5395
+  },
+  {
+   "mid": 0.0064369,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00612
+  },
+  {
+   "mid": 29.4883448,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 29.636
+  },
+  {
+   "mid": 560.527,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 560.53
+  },
+  {
+   "mid": 0.0015396828,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.0015474
+  },
+  {
+   "mid": 0.1,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.095
+  },
+  {
+   "mid": 2.69e-05,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 61647.743,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 61586.0
+  },
+  {
+   "mid": 4000.0,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 4004.0
+  },
+  {
+   "mid": 2.37e-06,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 1.5804,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 1.5646
+  },
+  {
+   "mid": 0.00012883,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.0055,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00545
+  },
+  {
+   "mid": 41.20842,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 41.17
+  },
+  {
+   "mid": 7.85e-06,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 8e-06
+  },
+  {
+   "mid": 390000.0,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 390390.0
+  },
+  {
+   "mid": 0.0002241256,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 2.22704529e-05,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.0234,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.021
+  },
+  {
+   "mid": 1e-05,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 50.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 50.0
+  },
+  {
+   "mid": 1770.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 1716.9
+  },
+  {
+   "mid": 0.002,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00201
+  },
+  {
+   "mid": 300.0,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 300.3
+  },
+  {
+   "mid": 6.01e-05,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 50000.0,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 47500.0
+  },
+  {
+   "mid": 1.514571e-06,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 6450.0,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 6443.6
+  },
+  {
+   "mid": 0.0003,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0003
+  },
+  {
+   "mid": 201564.3,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 207610.0
+  },
+  {
+   "mid": 0.0068,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.007
+  },
+  {
+   "mid": 0.0025475296,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0027
+  },
+  {
+   "mid": 0.04453,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.04448
+  },
+  {
+   "mid": 2.7e-06,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 3e-06
+  },
+  {
+   "mid": 0.00124,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 738582.24,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 731200.0
+  },
+  {
+   "mid": 1.731106e-05,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 2e-05
+  },
+  {
+   "mid": 0.03,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.0297
+  },
+  {
+   "mid": 4.665e-06,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 3609.3,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 3645.4
+  },
+  {
+   "mid": 34600.0,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 35638.0
+  },
+  {
+   "mid": 7.7e-06,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 4049.846,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 3928.4
+  },
+  {
+   "mid": 2.45e-05,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 649.82,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 650.47
+  },
+  {
+   "mid": 137.0,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 136.31
+  },
+  {
+   "mid": 0.0120613,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.012
+  },
+  {
+   "mid": 1.184,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 1.2195
+  },
+  {
+   "mid": 0.00222523,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.00223
+  },
+  {
+   "mid": 1600.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 1680.0
+  },
+  {
+   "mid": 0.3,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.309
+  },
+  {
+   "mid": 0.001880279,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.001878
+  },
+  {
+   "mid": 6733.25,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 6935.2
+  },
+  {
+   "mid": 8.7953,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 8.3555
+  },
+  {
+   "mid": 4393.94,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 4415.9
+  },
+  {
+   "mid": 0.00170739,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.002
+  },
+  {
+   "mid": 309.7,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 310.01
+  },
+  {
+   "mid": 67.0,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 66.67
+  },
+  {
+   "mid": 7.59,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 7.2105
+  },
+  {
+   "mid": 2000.0,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 2010.0
+  },
+  {
+   "mid": 2.838e-06,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.002763,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00275
+  },
+  {
+   "mid": 1.20396429e-05,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 1e-05
+  },
+  {
+   "mid": 210000.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 203700.0
+  },
+  {
+   "mid": 133.0,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 146.3
+  },
+  {
+   "mid": 411.1,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 411.51
+  },
+  {
+   "mid": 0.242,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.23
+  },
+  {
+   "mid": 8.325906e-05,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0001
+  },
+  {
+   "mid": 0.52527734,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.47
+  },
+  {
+   "mid": 86.7746,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 86.775
+  },
+  {
+   "mid": 5.7608e-06,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 5.8e-06
+  },
+  {
+   "mid": 0.007,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0063
+  },
+  {
+   "mid": 1.066,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 1.0127
+  },
+  {
+   "mid": 0.0652,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.06846
+  },
+  {
+   "mid": 0.624,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.62462
+  },
+  {
+   "mid": 1.1622576e-06,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 22.63,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 22.653
+  },
+  {
+   "mid": 0.00076,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.000752
+  },
+  {
+   "mid": 70100.0,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 77110.0
+  },
+  {
+   "mid": 0.04687,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.047
+  },
+  {
+   "mid": 1580.0,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 1578.4
+  },
+  {
+   "mid": 811290.5,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 730160.0
+  },
+  {
+   "mid": 39983.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 39983.0
+  },
+  {
+   "mid": 34568.29,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 34395.0
+  },
+  {
+   "mid": 2.313363e-06,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 4.9174e-06,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.0002,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.0002
+  },
+  {
+   "mid": 0.18581126,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.17652
+  },
+  {
+   "mid": 62.3793,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 60.508
+  },
+  {
+   "mid": 10400.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 10400.0
+  },
+  {
+   "mid": 0.0010759,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.0010221
+  },
+  {
+   "mid": 1.1064,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 1.14
+  },
+  {
+   "mid": 0.0302227792,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.030525
+  },
+  {
+   "mid": 0.00317,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.003
+  },
+  {
+   "mid": 0.008,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.00776
+  },
+  {
+   "mid": 3071.46,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 3102.2
+  },
+  {
+   "mid": 5583.07623,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 5555.2
+  },
+  {
+   "mid": 0.00116,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.0011
+  },
+  {
+   "mid": 1100.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 1155.0
+  },
+  {
+   "mid": 0.0077327288,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0073
+  },
+  {
+   "mid": 149920.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 149920.0
+  },
+  {
+   "mid": 2.709803,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 2.68
+  },
+  {
+   "mid": 3.8e-06,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 192.02,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 186.26
+  },
+  {
+   "mid": 5.776e-05,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 112.7,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 113.8
+  },
+  {
+   "mid": 6.8e-05,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 6.8e-05
+  },
+  {
+   "mid": 0.002725814,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.002644
+  },
+  {
+   "mid": 888000.0,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 892440.0
+  },
+  {
+   "mid": 0.0007083,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.000712
+  },
+  {
+   "mid": 216384.75,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 215300.0
+  },
+  {
+   "mid": 0.0004332829,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 1.32869538e-05,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.64,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.64
+  },
+  {
+   "mid": 2.8429e-05,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.00116248,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0012
+  },
+  {
+   "mid": 4510.99,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 4962.1
+  },
+  {
+   "mid": 8900.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 8900.0
+  },
+  {
+   "mid": 160000.0,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 161600.0
+  },
+  {
+   "mid": 877000.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 850690.0
+  },
+  {
+   "mid": 306089.9,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 275480.0
+  },
+  {
+   "mid": 40.548,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 36.493
+  },
+  {
+   "mid": 1528.0,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 1451.6
+  },
+  {
+   "mid": 0.002010274,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00221
+  },
+  {
+   "mid": 0.202088,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.20209
+  },
+  {
+   "mid": 0.000169674678,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0002
+  },
+  {
+   "mid": 0.728471,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.69
+  },
+  {
+   "mid": 7.2e-05,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 7.2e-05
+  },
+  {
+   "mid": 0.29,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.3045
+  },
+  {
+   "mid": 140.8514,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 140.99
+  },
+  {
+   "mid": 2730.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 2866.5
+  },
+  {
+   "mid": 0.00061,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.001
+  },
+  {
+   "mid": 930211.49,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 929280.0
+  },
+  {
+   "mid": 738200.0,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 738940.0
+  },
+  {
+   "mid": 4700.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 4935.0
+  },
+  {
+   "mid": 0.44627875,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.4463
+  },
+  {
+   "mid": 166.5529,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 174.88
+  },
+  {
+   "mid": 0.023514187,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.023514
+  },
+  {
+   "mid": 0.0012798,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.0013
+  },
+  {
+   "mid": 6e-06,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 2.8486682e-05,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 2.8e-05
+  },
+  {
+   "mid": 70.0,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 63.0
+  },
+  {
+   "mid": 0.401988,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.4422
+  },
+  {
+   "mid": 622000.0,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 590900.0
+  },
+  {
+   "mid": 3000.0,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 3090.0
+  },
+  {
+   "mid": 1.0,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 1.0
+  },
+  {
+   "mid": 2.85e-05,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 1371.91,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 1234.7
+  },
+  {
+   "mid": 0.005865345,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.01
+  },
+  {
+   "mid": 0.001474664,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00146
+  },
+  {
+   "mid": 1.17144,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 1.1
+  },
+  {
+   "mid": 1534.4,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 1526.7
+  },
+  {
+   "mid": 1.202e-06,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.0
+  },
+  {
+   "mid": 3.9e-05,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 7430.0,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 7430.0
+  },
+  {
+   "mid": 0.21181,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.201
+  },
+  {
+   "mid": 1.5590348,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 1.559
+  },
+  {
+   "mid": 1.4675957e-05,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 1.5e-05
+  },
+  {
+   "mid": 171.629,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 169.91
+  },
+  {
+   "mid": 84000.0,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 86520.0
+  },
+  {
+   "mid": 0.0380498406,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 502000.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 486940.0
+  },
+  {
+   "mid": 1.672108e-05,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 5.55385e-05,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 4.6759,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 4.671
+  },
+  {
+   "mid": 110000.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 106700.0
+  },
+  {
+   "mid": 6.0,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 5.82
+  },
+  {
+   "mid": 1.00049565e-05,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.8395031,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.84034
+  },
+  {
+   "mid": 200000.0,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 220000.0
+  },
+  {
+   "mid": 31.9337382,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 32.093
+  },
+  {
+   "mid": 0.0077,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00847
+  },
+  {
+   "mid": 8.7e-05,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 5.2e-06,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 6e-06
+  },
+  {
+   "mid": 3.69331186,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 3.6564
+  },
+  {
+   "mid": 0.0007523444,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 0.0008
+  },
+  {
+   "mid": 0.0067357,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.01
+  },
+  {
+   "mid": 0.000223,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00022
+  },
+  {
+   "mid": 547.53,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 520.15
+  },
+  {
+   "mid": 136335.82,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 135650.0
+  },
+  {
+   "mid": 4e-06,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 916000.0,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 920580.0
+  },
+  {
+   "mid": 36.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 37.8
+  },
+  {
+   "mid": 2.14,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 2.247
+  },
+  {
+   "mid": 6132.65,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 6745.9
+  },
+  {
+   "mid": 111189.416,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 111190.0
+  },
+  {
+   "mid": 1.4,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 1.358
+  },
+  {
+   "mid": 0.0002167329,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.00021
+  },
+  {
+   "mid": 0.8403074,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.84
+  },
+  {
+   "mid": 2e-06,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.8,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.88
+  },
+  {
+   "mid": 5.41,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 5.383
+  },
+  {
+   "mid": 2e-05,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 14.274,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 14.417
+  },
+  {
+   "mid": 820.0,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 815.9
+  },
+  {
+   "mid": 0.00867175842,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.008672
+  },
+  {
+   "mid": 4.615e-05,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 5e-05
+  },
+  {
+   "mid": 0.0004238192,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.000403
+  },
+  {
+   "mid": 0.002584614,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 0.0025717
+  },
+  {
+   "mid": 0.0002,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.0002
+  },
+  {
+   "mid": 6.432081,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 6.4256
+  },
+  {
+   "mid": 320.36215,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 323.57
+  },
+  {
+   "mid": 0.030093226,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 5265.0,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 5422.9
+  },
+  {
+   "mid": 6563.515,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 6557.0
+  },
+  {
+   "mid": 5.36e-06,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 21.3,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 21.279
+  },
+  {
+   "mid": 1.82759006e-05,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 2e-05
+  },
+  {
+   "mid": 0.14089908,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 0.14104
+  },
+  {
+   "mid": 600000.0,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 606000.0
+  },
+  {
+   "mid": 39.41,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 39.016
+  },
+  {
+   "mid": 49812.62,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 44831.0
+  },
+  {
+   "mid": 28622.0,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 31484.0
+  },
+  {
+   "mid": 207400.0,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 209470.0
+  },
+  {
+   "mid": 0.57781,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 0.5807
+  },
+  {
+   "mid": 3.052e-06,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 3.08e-06
+  },
+  {
+   "mid": 6900.0,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 7590.0
+  },
+  {
+   "mid": 0.00054,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.0005454
+  },
+  {
+   "mid": 0.0001713219,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.02,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0199
+  },
+  {
+   "mid": 0.0092051067,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 59400.0,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 56430.0
+  },
+  {
+   "mid": 31.8,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 31.959
+  },
+  {
+   "mid": 2.2101137e-05,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 2.3e-05
+  },
+  {
+   "mid": 10.51,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 9.459
+  },
+  {
+   "mid": 696.5,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 689.53
+  },
+  {
+   "mid": 345727.33,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 363010.0
+  },
+  {
+   "mid": 7.516e-06,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 1e-05
+  },
+  {
+   "mid": 0.001,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 4.58649849e-06,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 3.2005e-06,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 3.3e-06
+  },
+  {
+   "mid": 0.29489,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.2802
+  },
+  {
+   "mid": 0.0097944816,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.01077
+  },
+  {
+   "mid": 0.00991376755,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.01
+  },
+  {
+   "mid": 0.0355476,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.03377
+  },
+  {
+   "mid": 0.0007,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.00069
+  },
+  {
+   "mid": 2.0059e-05,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 941440.0,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 894370.0
+  },
+  {
+   "mid": 700.0,
+   "is_buy": false,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 693.0
+  },
+  {
+   "mid": 0.0156793,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.02
+  },
+  {
+   "mid": 97.7,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 92.815
+  },
+  {
+   "mid": 0.015267,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.59,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.531
+  },
+  {
+   "mid": 1.2e-05,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 1.3e-05
+  },
+  {
+   "mid": 3.83271e-06,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 0.0
+  },
+  {
+   "mid": 1700.0,
+   "is_buy": true,
+   "slippage": 0.1,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 1870.0
+  },
+  {
+   "mid": 1.35098e-05,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 4494.0,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 4,
+   "spot": true,
+   "price": 4269.3
+  },
+  {
+   "mid": 47340.5159,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 49708.0
+  },
+  {
+   "mid": 3.1718,
+   "is_buy": false,
+   "slippage": 0.05,
+   "sz_decimals": 5,
+   "spot": true,
+   "price": 3.013
+  },
+  {
+   "mid": 3779.6,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 3775.8
+  },
+  {
+   "mid": 13.9673,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": true,
+   "price": 13.967
+  },
+  {
+   "mid": 17976.3,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 18875.0
+  },
+  {
+   "mid": 0.0816,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 0,
+   "spot": true,
+   "price": 0.082416
+  },
+  {
+   "mid": 0.0017428346,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 0.000142,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 34.23,
+   "is_buy": true,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 35.257
+  },
+  {
+   "mid": 2.6623988e-06,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 3e-06
+  },
+  {
+   "mid": 6433.0,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 6754.7
+  },
+  {
+   "mid": 0.0001524,
+   "is_buy": true,
+   "slippage": 0.001,
+   "sz_decimals": 3,
+   "spot": true,
+   "price": 0.00015
+  },
+  {
+   "mid": 0.41,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 0.41
+  },
+  {
+   "mid": 0.0083,
+   "is_buy": false,
+   "slippage": 0.001,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 0.008
+  },
+  {
+   "mid": 1.979e-06,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 5,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 1.48,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 1.48
+  },
+  {
+   "mid": 2.2312e-06,
+   "is_buy": true,
+   "slippage": 0.01,
+   "sz_decimals": 1,
+   "spot": true,
+   "price": 2.3e-06
+  },
+  {
+   "mid": 0.000106,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 0.0001
+  },
+  {
+   "mid": 2.3,
+   "is_buy": false,
+   "slippage": 0.1,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 2.07
+  },
+  {
+   "mid": 2.0213925,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 2.12
+  },
+  {
+   "mid": 1813.205,
+   "is_buy": true,
+   "slippage": 0,
+   "sz_decimals": 1,
+   "spot": false,
+   "price": 1813.2
+  },
+  {
+   "mid": 3.26e-05,
+   "is_buy": false,
+   "slippage": 0.03,
+   "sz_decimals": 4,
+   "spot": false,
+   "price": 0.0
+  },
+  {
+   "mid": 379.983,
+   "is_buy": true,
+   "slippage": 0.05,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 398.98
+  },
+  {
+   "mid": 136.447,
+   "is_buy": false,
+   "slippage": 0,
+   "sz_decimals": 2,
+   "spot": false,
+   "price": 136.45
+  },
+  {
+   "mid": 100.0,
+   "is_buy": true,
+   "slippage": 0.005,
+   "sz_decimals": 0,
+   "spot": false,
+   "price": 100.5
+  },
+  {
+   "mid": 40.0,
+   "is_buy": false,
+   "slippage": 0.005,
+   "sz_decimals": 3,
+   "spot": false,
+   "price": 39.8
+  }
+ ]
+}
