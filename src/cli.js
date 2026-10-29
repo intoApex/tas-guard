@@ -16,6 +16,8 @@ import { startMockEvm, DEMO_REVERT_CONTRACT } from "./demo-evm.js";
 import { SolRpcGuard } from "./sol-rpc.js";
 import { resolveSolanaPolicy } from "./solana-policy.js";
 import { runSolDemo } from "./sol-demo.js";
+import { HlServer, HL_PROFILE, approveFee } from "./hyperliquid.js";
+import { feePercent } from "./hl-fee.js";
 
 const HELP = `TAS Guard ${VERSION}: trading-aware safety proxy for AI agents using broker and exchange MCP servers.
 
@@ -34,6 +36,15 @@ Solana mode: the same idea for Solana agents (simulates every transaction before
   tas-guard sol-rpc --config guard.json [--listen 127.0.0.1:8890]
   tas-guard sol-demo             watch it handle 7 agent transactions on a mock chain (no keys, no money)
   tas-guard init solana          print a starter guard.json for Solana
+
+Hyperliquid mode: trade Hyperliquid directly through the same limits, approvals and kill switch:
+  tas-guard hl [--testnet] [--config guard.json]
+                                 your MCP client starts this; needs HL_ACCOUNT (your main address) and
+                                 HL_API_PRIVATE_KEY (an API wallet: it can trade, it can't withdraw)
+  tas-guard hl approve-fee [--testnet] [--yes]
+                                 approve the ${feePercent()} builder fee once (reads HL_MAIN_PRIVATE_KEY for this
+                                 command only). Or turn the fee off with TAS_GUARD_HL_BUILDER_FEE=0
+  tas-guard init hyperliquid     print a starter guard.json for Hyperliquid
 
 Human controls (run these yourself; never let the agent run them):
   tas-guard pending              list actions waiting for approval
@@ -152,6 +163,38 @@ async function cmdSolRpc(argv) {
   serveUntilSignal(guard);
 }
 
+// `tas-guard hl`: Hyperliquid mode, a stdio MCP server that trades Hyperliquid's API directly (no upstream server).
+const HL_CONFIG_KEYS = new Set(["$schema", "name", "testnet", "account", "policy", "approvals", "state_dir"]);
+async function cmdHl(argv) {
+  if (argv[0] === "approve-fee") {
+    await approveFee({ testnet: argv.includes("--testnet"), yes: argv.includes("--yes") });
+    return;
+  }
+  const cfgPath = flag(argv, "--config");
+  const path = cfgPath ? resolve(cfgPath) : null;
+  const cfg = path ? expandEnv(readJson(path)) : {};
+  const unknown = Object.keys(cfg).filter((k) => !HL_CONFIG_KEYS.has(k));
+  if (unknown.length) throw new Error(`${path}: unknown setting(s) ${unknown.join(", ")}. Allowed: ${[...HL_CONFIG_KEYS].filter((k) => k !== "$schema").join(", ")}. Keys never go in this file: use the HL_API_PRIVATE_KEY environment variable.`);
+  const testnet = argv.includes("--testnet") || cfg.testnet === true;
+  const account = process.env.HL_ACCOUNT || cfg.account;
+  if (!account) throw new Error("Set HL_ACCOUNT to your Hyperliquid account's main address (the one you deposit to).");
+  if (!process.env.HL_API_PRIVATE_KEY) throw new Error("Set HL_API_PRIVATE_KEY to the private key of a Hyperliquid API wallet. Create one at https://app.hyperliquid.xyz/API: it can trade but can't withdraw.");
+  const policy = resolvePolicy(cfg.policy || {});
+  const name = cfg.name || (testnet ? "hyperliquid-testnet" : "hyperliquid");
+  const state = new State(cfg.state_dir ? resolve(dirname(path), cfg.state_dir) : defaultStateDir(), name);
+  const log = (s) => process.stderr.write("[tas-guard] " + s + "\n");
+  const server = new HlServer({ account, apiKey: process.env.HL_API_PRIVATE_KEY, testnet, version: VERSION, log });
+  const proxy = new GuardProxy({ profile: HL_PROFILE, policy, state, local: server, mode: testnet ? "testnet" : "live", approvals: cfg.approvals || {}, log });
+  proxy.onClosed = () => process.exit(0);
+  server.startup();
+}
+export const HL_STARTER = {
+  name: "hyperliquid",
+  testnet: false,
+  policy: { max_order_value: 200, max_daily_value: 1000, approve_over: 100, max_orders_per_minute: 3, max_orders_per_day: 20, symbols_allow: ["BTC", "ETH", "SOL"], live_requires_approval: false },
+  approvals: {},
+};
+
 // `tas-guard rpc-demo`: the onchain guard in front of a built-in mock chain (Base, chain id 8453).
 export const DEMO_WALLET = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"; // well-known public test account (Hardhat #0)
 const DEMO_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
@@ -199,6 +242,7 @@ const commands = {
   "rpc-demo": cmdRpcDemo,
   "sol-rpc": cmdSolRpc,
   "sol-demo": () => runSolDemo(),
+  hl: cmdHl,
   pending() {
     const items = new State().pending().items.filter((i) => i.status === "pending");
     if (!items.length) return console.log("No actions are waiting for approval.");
@@ -274,6 +318,7 @@ const commands = {
   },
   init(argv) {
     const slug = argv[0];
+    if (slug === "hyperliquid") return console.log(JSON.stringify(HL_STARTER, null, 2));
     if (slug === "solana") {
       return console.log(JSON.stringify({
         name: "solana", upstream_rpc: "https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}", listen: "127.0.0.1:8890",
@@ -283,7 +328,7 @@ const commands = {
       }, null, 2));
     }
     const p = slug ? loadProfile(slug) : null;
-    if (!p) throw new Error(`Usage: tas-guard init <profile>. Profiles: ${listBuiltinProfiles().join(", ")}, or "solana"`);
+    if (!p) throw new Error(`Usage: tas-guard init <profile>. Profiles: ${listBuiltinProfiles().join(", ")}, or "solana" or "hyperliquid"`);
     const upstream = {
       "alpaca-mcp-server": { command: "uvx", args: ["alpaca-mcp-server"], env: { ALPACA_API_KEY: "${ALPACA_API_KEY}", ALPACA_SECRET_KEY: "${ALPACA_SECRET_KEY}", ALPACA_PAPER_TRADE: "true" } },
       "ccxt-mcp-server": { command: "npx", args: ["-y", "ccxt-mcp"] },

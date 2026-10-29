@@ -12,9 +12,11 @@ AI client  ──►  TAS Guard  ──►  Alpaca / CCXT / any trading MCP serv
                    └─ logs: every decision, hash-chained
 ```
 
-Zero dependencies. About 2,000 lines of plain JavaScript you can read in one sitting.
+Zero dependencies. About 4,600 lines of plain JavaScript you can read in a few sittings.
 
-**New in 0.4: [Solana mode](#solana-mode).** `tas-guard sol-rpc` simulates every transaction your Solana agent sends and blocks drainer patterns (hidden delegations, account takeovers), runaway priority fees and anything over your caps, including per-program caps such as "pump.fun: $20 per trade, $100 a day". Try it: `npx tas-guard sol-demo`.
+**New in 0.5: [Hyperliquid mode](#hyperliquid-mode).** `tas-guard hl` trades Hyperliquid directly, with no other MCP server: your agent gets `hl_` tools, and every order goes through the same caps, allow list, approvals, kill switch and audit log. It signs with a Hyperliquid API wallet, which can trade but can't withdraw. It adds a 0.02% builder fee that funds TradingAgentStack ([details and opt-out](#builder-fee)).
+
+**Also new in 0.4: [Solana mode](#solana-mode).** `tas-guard sol-rpc` simulates every transaction your Solana agent sends and blocks drainer patterns (hidden delegations, account takeovers), runaway priority fees and anything over your caps, including per-program caps such as "pump.fun: $20 per trade, $100 a day". Try it: `npx tas-guard sol-demo`.
 
 **Also: [onchain (EVM) mode](#onchain-evm-mode)** for agents that hold their own EVM wallet: `tas-guard rpc` is a local JSON-RPC endpoint your agent uses as its RPC URL.
 
@@ -451,6 +453,119 @@ Kill switch, phone approvals and the audit log work exactly as in the other mode
 - **Durable-nonce transactions** are checked when they're sent through the guard, but a copy sent elsewhere later isn't.
 - **Same caveat as the other modes:** an agent with shell access could run `tas-guard approve` itself unless you use phone approvals with `"cli": false`.
 
+## Hyperliquid mode
+
+`tas-guard hl` is an MCP server that trades Hyperliquid itself, through Hyperliquid's public API. There's no upstream MCP server to install: the guard prices, checks, signs and sends each order.
+
+```
+AI client ──► tas-guard hl ──► api.hyperliquid.xyz  (POST /info, POST /exchange)
+                 │
+                 ├─ values every order itself: size × limit price, or mid ± slippage for market orders
+                 ├─ blocks, asks you, or signs locally with your API wallet (it can trade, it can't withdraw)
+                 └─ logs: every decision, in the same hash-chained audit log
+```
+
+### Setup
+
+1. **Create an API wallet.** On [app.hyperliquid.xyz/API](https://app.hyperliquid.xyz/API), generate an API wallet, authorize it for your account and copy its private key. An API wallet can place and cancel orders for your account, but it **can't withdraw or transfer funds**, so a leaked key can't drain the account. That's why TAS Guard asks for one and refuses your main wallet's key. Give TAS Guard its own API wallet rather than sharing one with another bot: Hyperliquid tracks nonces per signing wallet.
+2. **Set two environment variables** where your MCP client starts the guard:
+   - `HL_ACCOUNT`: your account's main address (the one you deposit to and see in the app).
+   - `HL_API_PRIVATE_KEY`: the API wallet's private key.
+3. **Approve the builder fee once** (or [turn it off](#builder-fee)). Hyperliquid requires the main wallet, not the API wallet, to approve a builder fee, so this one command reads your main wallet's key from `HL_MAIN_PRIVATE_KEY`. It prints what it's approving and asks you to confirm. The key is used for this one signature, never stored or logged. Run it yourself, never through the agent:
+
+```
+HL_MAIN_PRIVATE_KEY=0x... npx tas-guard hl approve-fee            # add --testnet for testnet
+```
+
+4. **Add it to your AI app.** Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "hyperliquid": {
+      "command": "npx",
+      "args": ["-y", "tas-guard", "hl", "--config", "/Users/you/tas-guard/hyperliquid.json"],
+      "env": {
+        "HL_ACCOUNT": "0xYourMainAddress",
+        "HL_API_PRIVATE_KEY": "0xYourApiWalletPrivateKey"
+      }
+    }
+  }
+}
+```
+
+(On Windows use `"command": "cmd", "args": ["/c", "npx", "-y", "tas-guard", "hl", "--config", "C:\\Users\\you\\tas-guard\\hyperliquid.json"]`.) Add `"--testnet"` to the args to trade [testnet](https://app.hyperliquid-testnet.xyz) with test funds; testnet needs its own API wallet. Claude Code: `claude mcp add hyperliquid -e HL_ACCOUNT=0x... -e HL_API_PRIVATE_KEY=0x... -- npx -y tas-guard hl --config ~/tas-guard/hyperliquid.json`.
+
+Then ask the agent to call `tas_guard_status` (limits, today's usage, network, account, fee) or `hl_get_account`.
+
+### Policy
+
+The config file is optional. `npx tas-guard init hyperliquid` prints this one:
+
+```json
+{
+  "name": "hyperliquid",
+  "testnet": false,
+  "policy": {
+    "max_order_value": 200,
+    "max_daily_value": 1000,
+    "approve_over": 100,
+    "max_orders_per_minute": 3,
+    "max_orders_per_day": 20,
+    "symbols_allow": ["BTC", "ETH", "SOL"],
+    "live_requires_approval": false
+  },
+  "approvals": {}
+}
+```
+
+Values are in USDC. The policy works exactly as in [the policy reference](#policy-reference). Without a config file you get the defaults: $500 per order, $2,000 a day, and on mainnet **every order needs your approval** (`live_requires_approval`). This example turns that off, so orders up to `approve_over` ($100) go through on their own and bigger ones ask you. Add `"approvals": { "telegram": ... }` (or run `npx tas-guard telegram-setup --config ~/tas-guard/hyperliquid.json`) to approve on your phone. Other settings: `account` (instead of `HL_ACCOUNT`) and `state_dir`. Keys are never read from this file; unknown settings are rejected.
+
+| Tool | Class | Default |
+|---|---|---|
+| `hl_get_account`, `hl_get_mids`, `hl_get_open_orders` | `read` | allow |
+| `hl_place_order` (limit or market, `reduce_only`, `tif`: Gtc, Ioc, Alo) | `order` | check limits |
+| `hl_cancel_order` | `cancel` | allow (also during the kill switch) |
+| `hl_close_position` (reduce-only market order) | `close` | allow (also during the kill switch) |
+| `hl_update_leverage` | `leverage` | **block** (hidden from the agent). `"classes": { "leverage": "approve" }` makes it ask you |
+
+### How orders are valued
+
+The guard prices each order before the policy sees it, and the order it checked is the order it signs:
+
+- **Buy limit:** size × limit price. Fills can only be cheaper.
+- **Sell limit:** size × the higher of the limit price and the mid. A sell priced far below the market fills near the mid, so a "sell 1 BTC at $1" can't slip under your caps. If there's no mid to compare with, the value counts as unknown (`unknown_value`, which asks you by default).
+- **Market:** an immediate-or-cancel order at the mid ± `max_slippage_pct` (default 1%, at most 10%), rounded the way Hyperliquid's Python SDK does it. Value: size × that worst price.
+- **Tick rules:** prices are rounded to 5 significant figures and at most 6 − szDecimals decimals (8 − szDecimals for spot), buys down and sells up, so the order is never worse than asked. Sizes are rounded down to szDecimals. The result says when anything was adjusted.
+- **Symbols:** allow and block lists see the market's canonical name: `BTC`, `ETH`, `HYPE/USDC`. Lowercase names and spot aliases like `@107` are resolved first, so they can't get around a list.
+- **Daily totals** count an order's checked value once Hyperliquid accepts it (resting or filled). Rejected orders don't count.
+
+### Builder fee
+
+**Hyperliquid mode adds a 0.02% builder fee to each order, paid to TradingAgentStack to fund the project; it's shown in Hyperliquid's own fee breakdown. Set `TAS_GUARD_HL_BUILDER_FEE=0` to turn it off.**
+
+- **How much:** 0.02% of the filled notional (20 cents on a $1,000 fill), on top of Hyperliquid's own trading fees. Hyperliquid charges builder fees on both sides of perp trades and on spot sells, not on spot buys.
+- **How:** each order carries Hyperliquid's builder code (`"builder": {"b": <TradingAgentStack's address>, "f": 20}`, where `f` is in tenths of a basis point). Hyperliquid only accepts it after you approve the builder once (`tas-guard hl approve-fee`), and it never charges more than the rate you approved. The approval gives nobody access to your funds, and Hyperliquid lets you revoke it at any time.
+- **Off:** with `TAS_GUARD_HL_BUILDER_FEE=0` (in the `env` block of your MCP config) orders are sent without a builder code: no fee and no approval needed. Everything else works the same. `tas_guard_status` shows whether the fee is on.
+- **Where it lives:** the address and the rate are two constants in [`src/hl-fee.js`](src/hl-fee.js). The guard logs the fee setting at startup.
+
+If Hyperliquid rejects an order because the fee isn't approved, the agent is told to have you run `tas-guard hl approve-fee` or set `TAS_GUARD_HL_BUILDER_FEE=0`.
+
+### Signing
+
+Orders are signed locally the way Hyperliquid's official Python SDK signs them: the action is msgpack-encoded with the SDK's key order, hashed with keccak-256 together with the nonce, and signed as EIP-712 typed data with secp256k1 (RFC 6979 deterministic nonces, low s). All of it is plain JavaScript with no dependencies ([`src/eth-crypto.js`](src/eth-crypto.js), [`src/hl-sign.js`](src/hl-sign.js)). The tests check every byte against vectors the SDK itself produced (hyperliquid-python-sdk 0.24.0): msgpack bytes, the action hash, the EIP-712 digest, `r`, `s`, `v` and the whole posted payload, for orders with and without a builder code, a market order, a spot order, a cancel, a leverage change and the fee approval, on mainnet and testnet. The generator is [`test/fixtures/gen-hl-vectors.py`](test/fixtures/gen-hl-vectors.py). Every signature is also checked to recover to the API wallet's address before anything is sent.
+
+### Safety notes and limitations (Hyperliquid)
+
+- **Keys:** `HL_API_PRIVATE_KEY` stays on your machine; only signatures are sent, and only to Hyperliquid's API. Keys are never logged, audited or returned to the agent. The guard logs the API wallet's address, not its key.
+- **Wrong key, wrong account:** your main wallet's key is refused outright. At startup the guard also asks Hyperliquid whose wallet the key is; if it's a regular account or an API wallet of a different account, every order, cancel and leverage change is refused until you fix the settings. It also warns if the builder fee isn't approved yet.
+- **The kill switch** (`npx tas-guard kill`, or `/kill` on your phone) blocks new orders and leverage changes immediately; cancels and closing positions keep working. Approvals, phone controls and the audit log work exactly as in the other modes.
+- **Unknown outcomes:** if the connection drops while an order is being sent, the agent is told the order may or may not have been placed and to check open orders and the account before retrying. Such orders don't count toward daily totals.
+- **Not supported yet:** trigger (TP/SL) orders, order modification, vaults and subaccounts, and builder-deployed perp markets (`dex:COIN`).
+- **Only what goes through the guard is guarded.** The API wallet can still trade from anywhere its key is. Keep it only in the guard's config.
+- **Signing uses BigInt math, which isn't constant-time.** That matters to an attacker who can time many signatures on your machine; if they can do that, they likely have other ways in.
+- **Same caveat as the other modes:** an agent with shell access could run `tas-guard approve` (or `approve-fee`) itself unless you use phone approvals with `"cli": false` and keep the main wallet key out of its reach.
+
 ## Windows and Claude Desktop notes
 
 Tested on Windows with the Microsoft Store version of Claude Desktop, October 2026.
@@ -472,9 +587,11 @@ Tested on Windows with the Microsoft Store version of Claude Desktop, October 20
 ## Development
 
 ```
-npm test        # 78 tests: unit, end to end through a mock broker over real MCP stdio, the phone flow against a mock Telegram API,
-                # onchain mode (transaction decoding, policy, and the RPC proxy against a mock EVM node), and Solana mode
-                # (decoder, policy, and the RPC + WebSocket proxy against a mock Solana chain that executes transactions)
+npm test        # 106 tests: unit, end to end through a mock broker over real MCP stdio, the phone flow against a mock Telegram API,
+                # onchain mode (transaction decoding, policy, and the RPC proxy against a mock EVM node), Solana mode
+                # (decoder, policy, and the RPC + WebSocket proxy against a mock Solana chain that executes transactions), and
+                # Hyperliquid mode (signing checked byte for byte against the official Python SDK, and the MCP flow against a
+                # mock Hyperliquid API that verifies every signature). All offline.
 ```
 
 MIT licensed. Built by [TradingAgentStack](https://tradingagentstack.com), the independent directory of what AI trading tools can do with your money.
