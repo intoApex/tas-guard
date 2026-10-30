@@ -321,6 +321,16 @@ They work exactly as in MCP mode and share the same state. A held request stays 
 
 `npx tas-guard kill` (or `/kill` on your phone) blocks every send and signature on every guard; reads keep working. `npx tas-guard log` and `verify-log` cover onchain decisions too.
 
+### Base Builder Code (attribution, no fee)
+
+**On Base, onchain mode adds TradingAgentStack's [Builder Code](https://docs.base.org/apps/builder-codes/app-developers) to `eth_sendTransaction` calls. It's a short tag at the end of the calldata (ERC-8021) that lets Base count transactions sent through TAS Guard. You pay nothing for it, and contracts ignore the extra bytes. Set `TAS_GUARD_BASE_BUILDER_CODE=0` to turn it off.**
+
+- **When:** only `eth_sendTransaction` on Base (8453) and Base Sepolia (84532), after the transaction has passed every check, just before it's forwarded. Other chains, signatures and `eth_sendRawTransaction` are never changed: a raw transaction is already signed.
+- **Never twice:** a transaction that already ends in a Builder Code (another app's) is forwarded exactly as it is.
+- **Gas:** if the transaction sets a gas limit, it's raised by exactly the calldata gas of the tag (a few hundred gas), so a tight limit still fits.
+- **Your own code:** set `TAS_GUARD_BASE_BUILDER_CODE` to your own Builder Code to use it instead. `tas_guardStatus` shows which code is added, if any; the audit log records it on each transaction.
+- **Bots that sign locally (optional):** to tag those transactions too, add the suffix to your client yourself, for example with viem: `import { tasDataSuffix } from "tas-guard/src/base-attribution.js"` then `createWalletClient({ ..., dataSuffix: tasDataSuffix() })`. Nothing is added unless you do this.
+
 ### Limitations (onchain)
 
 - **Wallets must be configured.** The guard has no secp256k1 public-key recovery, so it can't prove who signed a raw transaction. It matches the transaction's nonce against your `wallets` and blocks anything that doesn't fit. A transaction signed by another key whose nonce happens to match would be treated as yours, though every policy check on its contents still applies.
