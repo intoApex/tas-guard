@@ -16,6 +16,8 @@ AI client  ──►  TAS Guard  ──►  Alpaca / CCXT / any trading MCP serv
 
 Zero dependencies. About 4,600 lines of plain JavaScript you can read in a few sittings.
 
+**New in 0.5.1:** on Base, onchain mode tags `eth_sendTransaction` calls with TradingAgentStack's [Builder Code](#base-builder-code-attribution-no-fee): attribution only, no fee, off with `TAS_GUARD_BASE_BUILDER_CODE=0`.
+
 **New in 0.5: [Hyperliquid mode](#hyperliquid-mode).** `tas-guard hl` trades Hyperliquid directly, with no other MCP server: your agent gets `hl_` tools, and every order goes through the same caps, allow list, approvals, kill switch and audit log. It signs with a Hyperliquid API wallet, which can trade but can't withdraw. It adds a 0.02% builder fee that funds TradingAgentStack ([details and opt-out](#builder-fee)).
 
 **Also new in 0.4: [Solana mode](#solana-mode).** `tas-guard sol-rpc` simulates every transaction your Solana agent sends and blocks drainer patterns (hidden delegations, account takeovers), runaway priority fees and anything over your caps, including per-program caps such as "pump.fun: $20 per trade, $100 a day". Try it: `npx tas-guard sol-demo`.
@@ -320,6 +322,16 @@ The agent can call `tas_guardStatus` on the RPC to see its limits and today's us
 They work exactly as in MCP mode and share the same state. A held request stays open until you approve it with `npx tas-guard approve <id>` or on your phone (the Telegram message shows the chain, contract, token, amount, USD value and reason), then it's forwarded and the agent gets the transaction hash. Denied or unanswered within `approval_ttl_minutes` → the agent gets a JSON-RPC error. If the agent's client gives up first, sending the same signed transaction again after you approve goes through once.
 
 `npx tas-guard kill` (or `/kill` on your phone) blocks every send and signature on every guard; reads keep working. `npx tas-guard log` and `verify-log` cover onchain decisions too.
+
+### Base Builder Code (attribution, no fee)
+
+**On Base, onchain mode adds TradingAgentStack's [Builder Code](https://docs.base.org/apps/builder-codes/app-developers) to `eth_sendTransaction` calls. It's a short tag at the end of the calldata (ERC-8021) that lets Base count transactions sent through TAS Guard. You pay nothing for it, and contracts ignore the extra bytes. Set `TAS_GUARD_BASE_BUILDER_CODE=0` to turn it off.**
+
+- **When:** only `eth_sendTransaction` on Base (8453) and Base Sepolia (84532), after the transaction has passed every check, just before it's forwarded. Other chains, signatures and `eth_sendRawTransaction` are never changed: a raw transaction is already signed.
+- **Never twice:** a transaction that already ends in a Builder Code (another app's) is forwarded exactly as it is.
+- **Gas:** if the transaction sets a gas limit, it's raised by exactly the calldata gas of the tag (a few hundred gas), so a tight limit still fits.
+- **Your own code:** set `TAS_GUARD_BASE_BUILDER_CODE` to your own Builder Code to use it instead. `tas_guardStatus` shows which code is added, if any; the audit log records it on each transaction.
+- **Bots that sign locally (optional):** to tag those transactions too, add the suffix to your client yourself, for example with viem: `import { tasDataSuffix } from "tas-guard/src/base-attribution.js"` then `createWalletClient({ ..., dataSuffix: tasDataSuffix() })`. Nothing is added unless you do this.
 
 ### Limitations (onchain)
 

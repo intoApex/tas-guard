@@ -7,6 +7,7 @@ import { decideOnchain, describe, chainName, usd } from "./onchain-policy.js";
 import { canonical, sha256 } from "./state.js";
 import { TelegramApprover } from "./telegram.js";
 import { VERSION } from "./proxy.js";
+import { attribute, builderCode, BASE_CHAIN_IDS } from "./base-attribution.js";
 
 const RAW_SEND = new Set(["eth_sendRawTransaction", "eth_sendRawTransactionSync"]);
 const TYPED = new Set(["eth_signTypedData", "eth_signTypedData_v1", "eth_signTypedData_v3", "eth_signTypedData_v4"]);
@@ -28,8 +29,9 @@ export class RpcGuard {
    * @param {object} o.policy          resolved onchain policy
    * @param {import('./state.js').State} o.state
    * @param {object} [o.approvals]     { cli?: boolean, telegram?: {...} }
+   * @param {string|null} [o.builderCode] Base Builder Code added to eth_sendTransaction on Base (default: see base-attribution.js)
    */
-  constructor({ upstream, headers = {}, wallets, policy, state, approvals = {}, log = (s) => process.stderr.write("[tas-guard] " + s + "\n") }) {
+  constructor({ upstream, headers = {}, wallets, policy, state, approvals = {}, builderCode: code = builderCode(), log = (s) => process.stderr.write("[tas-guard] " + s + "\n") }) {
     const u = new URL(upstream);
     this.headers = { "content-type": "application/json", ...headers };
     if (u.username || u.password) { // fetch refuses URLs with credentials: move them to a header
@@ -45,6 +47,7 @@ export class RpcGuard {
     this.state = state;
     this.log = log;
     this.approvalsCfg = approvals;
+    this.builderCode = code || null;
     this.seq = 0;
     this.sendLock = Promise.resolve();
     this.nextNonce = new Map();
@@ -58,7 +61,14 @@ export class RpcGuard {
   // ---------- hooks (the Solana guard overrides these) ----------
   parseWallets(wallets) { return new Set((wallets || []).map((w) => { if (!isAddress(w)) throw new Error(`wallets: '${w}' is not a 0x address`); return w.toLowerCase(); })); }
   isGuarded(m) { return isGuardedEvm(m); }
-  prepare() { return this.chainId().catch(() => {}); }
+  prepare() {
+    return this.chainId().then((cid) => {
+      if (this.builderCode && BASE_CHAIN_IDS.has(cid) && !this.saidAttribution) {
+        this.saidAttribution = true;
+        this.log(`Base Builder Code ${this.builderCode} is added to eth_sendTransaction calls (attribution only, no fee). Turn it off with TAS_GUARD_BASE_BUILDER_CODE=0.`);
+      }
+    }).catch(() => {});
+  }
   modeName() { return chainName(this.cid ?? null); }
   summarize(op) { return describe(op, this.policy); }
   needsCheck(op) { return op.send && this.policy.preflight; }
@@ -239,6 +249,7 @@ export class RpcGuard {
       limits: { max_tx_usd: p.max_tx_usd, max_daily_usd: p.max_daily_usd, approve_over_usd: p.approve_over_usd, max_tx_per_minute: p.max_tx_per_minute, max_tx_per_day: p.max_tx_per_day, chains_allow: p.chains_allow, unlimited_approval: p.unlimited_approval, preflight: p.preflight },
       today: { day: u.day, usd_used: u.spent, usd_left: Math.max(0, p.max_daily_usd - u.spent), transactions: u.orders, transactions_left: Math.max(0, p.max_tx_per_day - u.orders) },
       pending_approvals: pending.map((i) => ({ id: i.id, method: i.tool, summary: i.summary })),
+      base_builder_code: BASE_CHAIN_IDS.has(this.cid) ? this.builderCode : null,
     };
   }
   telegramStatus() {
@@ -290,13 +301,15 @@ export class RpcGuard {
       const fresh = this.decideNow(op);
       if (fresh.action === "block") return blocked(fresh.reason, { approved_by: approvedBy });
       if (fresh.action === "approve" && !approvedBy) return blocked(`needs approval now (${fresh.reason}). Send it again to start an approval.`);
-      const r = await this.forward(m);
+      // On Base, eth_sendTransaction gets the Builder Code just before it is forwarded (attribution only, no fee).
+      const tag = m.method === "eth_sendTransaction" && Array.isArray(m.params) ? attribute(m.params[0], op.chainId != null ? Number(op.chainId) : this.cid, this.builderCode) : { applied: false };
+      const r = await this.forward(tag.applied ? { ...m, params: [tag.tx, ...m.params.slice(1)] } : m);
       const ok = r === null || (r && r.error === undefined);
       if (ok && op.send) {
         this.onExecuted(op, fresh);
         if (this.tg?.notifyExecuted) this.tg.notify(`✅ Sent (${this.state.guard})\n${summary}${approvedBy ? `\nApproved via ${approvedBy}` : ""}`);
       }
-      this.state.audit({ ...base, outcome: ok ? (op.send ? "executed" : "signed") : "upstream_rejected", approved_by: approvedBy, counted: ok && op.send, result: ok && typeof r?.result === "string" ? r.result.slice(0, 66) : undefined, error: ok ? undefined : this.scrub(r?.error?.message || "") });
+      this.state.audit({ ...base, outcome: ok ? (op.send ? "executed" : "signed") : "upstream_rejected", approved_by: approvedBy, counted: ok && op.send, builder_code: tag.applied ? this.builderCode : undefined, result: ok && typeof r?.result === "string" ? r.result.slice(0, 66) : undefined, error: ok ? undefined : this.scrub(r?.error?.message || "") });
       this.log(`${ok ? "forwarded" : "upstream rejected"} ${m.method}: ${summary}${approvedBy ? ` (approved via ${approvedBy})` : ""}`);
       return r;
     };
