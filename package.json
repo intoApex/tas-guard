@@ -1,6 +1,6 @@
 {
   "name": "tas-guard",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Trading-aware safety proxy for AI agents: puts per-order and daily caps, symbol allowlists, human approvals, a kill switch and a tamper-evident audit log in front of any broker or exchange MCP server, in front of an EVM or Solana agent's JSON-RPC (Solana mode simulates every transaction), or directly on Hyperliquid (Hyperliquid mode trades its API itself, signing with an API wallet that can't withdraw).",
   "mcpName": "io.github.intoApex/tas-guard",
   "type": "module",

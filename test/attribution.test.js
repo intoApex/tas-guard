@@ -95,3 +95,11 @@ test("onchain mode: nothing is added off Base or without a code", async () => {
     } finally { await g.stop(); }
   }
 });
+
+test("TradingAgentStack's registered Builder Code encodes to the suffix base.dev shows", async () => {
+  const { BASE_BUILDER_CODE, tasDataSuffix } = await import("../src/base-attribution.js");
+  assert.equal(BASE_BUILDER_CODE, "bc_t9780fwl");
+  assert.equal(tasDataSuffix(), "0x62635f743937383066776c0b0080218021802180218021802180218021"); // copied from base.dev, Encoded String
+  assert.equal(builderCode({}), "bc_t9780fwl", "on by default");
+  assert.equal(builderCode({ TAS_GUARD_BASE_BUILDER_CODE: "0" }), null, "off with the env var");
+});

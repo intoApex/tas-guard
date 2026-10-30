@@ -16,6 +16,8 @@ AI client  ──►  TAS Guard  ──►  Alpaca / CCXT / any trading MCP serv
 
 Zero dependencies. About 4,600 lines of plain JavaScript you can read in a few sittings.
 
+**New in 0.5.1:** on Base, onchain mode tags `eth_sendTransaction` calls with TradingAgentStack's [Builder Code](#base-builder-code-attribution-no-fee): attribution only, no fee, off with `TAS_GUARD_BASE_BUILDER_CODE=0`.
+
 **New in 0.5: [Hyperliquid mode](#hyperliquid-mode).** `tas-guard hl` trades Hyperliquid directly, with no other MCP server: your agent gets `hl_` tools, and every order goes through the same caps, allow list, approvals, kill switch and audit log. It signs with a Hyperliquid API wallet, which can trade but can't withdraw. It adds a 0.02% builder fee that funds TradingAgentStack ([details and opt-out](#builder-fee)).
 
 **Also new in 0.4: [Solana mode](#solana-mode).** `tas-guard sol-rpc` simulates every transaction your Solana agent sends and blocks drainer patterns (hidden delegations, account takeovers), runaway priority fees and anything over your caps, including per-program caps such as "pump.fun: $20 per trade, $100 a day". Try it: `npx tas-guard sol-demo`.

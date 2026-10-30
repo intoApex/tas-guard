@@ -12,9 +12,8 @@
 // Turn it off with TAS_GUARD_BASE_BUILDER_CODE=0 (or false/off/no), or set it to your own Builder Code.
 // Bots that sign locally can add the code themselves with tasDataSuffix() (opt-in, see the README).
 
-// TODO(owner): set TradingAgentStack's Builder Code from base.dev (Settings > Builder Code), e.g. "bc_b7k3p9da".
-// While it is null, nothing is added.
-export const BASE_BUILDER_CODE = null;
+// TradingAgentStack's Builder Code, registered on base.dev for the "TAS Guard" project (Settings > Builder Code).
+export const BASE_BUILDER_CODE = "bc_t9780fwl"; // TAS Guard project on base.dev
 
 /** Chains where the code is added: Base and Base Sepolia. */
 export const BASE_CHAIN_IDS = new Set([8453, 84532]);

@@ -539,6 +539,6 @@ test("CLI: hl needs its environment, rejects unknown config keys, init prints a 
   const init = JSON.parse(execFileSync(process.execPath, [CLI, "init", "hyperliquid"], { encoding: "utf8" }));
   assert.equal(init.name, "hyperliquid");
   assert.deepEqual(init.policy.symbols_allow, ["BTC", "ETH", "SOL"]);
-  assert.match(execFileSync(process.execPath, [CLI, "--version"], { encoding: "utf8" }), /^0\.5\.0/);
+  assert.match(execFileSync(process.execPath, [CLI, "--version"], { encoding: "utf8" }), /^0\.5\.1/);
   assert.ok(!existsSync(join(home, "audit.jsonl")), "nothing ran");
 });
